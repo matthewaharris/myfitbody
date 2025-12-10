@@ -2909,20 +2909,36 @@ app.get('/api/admin/debug', requireAdmin, async (req, res) => {
     console.log('Debug: SERVICE_ROLE_KEY exists =', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
     console.log('Debug: SERVICE_ROLE_KEY length =', process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
 
-    // Simple query with no filters
-    const { data, error, count } = await supabase
+    // Check first few chars of key to verify it's service role
+    const keyStart = process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 50);
+    console.log('Debug: Key starts with:', keyStart);
+
+    // Simple query with no filters - users
+    const { data: users, error: usersError, count: usersCount } = await supabase
       .from('users')
       .select('id, email', { count: 'exact' });
 
-    console.log('Debug: Raw query result - data:', JSON.stringify(data), 'error:', error, 'count:', count);
+    // Simple query - meals
+    const { data: meals, error: mealsError, count: mealsCount } = await supabase
+      .from('meals')
+      .select('id, name', { count: 'exact' });
+
+    // Simple query - user_profiles
+    const { data: profiles, error: profilesError, count: profilesCount } = await supabase
+      .from('user_profiles')
+      .select('id, user_id', { count: 'exact' });
+
+    console.log('Debug: Users:', JSON.stringify(users), 'error:', usersError);
+    console.log('Debug: Meals:', JSON.stringify(meals), 'error:', mealsError);
+    console.log('Debug: Profiles:', JSON.stringify(profiles), 'error:', profilesError);
 
     res.json({
       supabaseUrl: process.env.SUPABASE_URL,
       serviceKeyExists: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
-      data,
-      error,
-      count
+      users: { data: users, error: usersError, count: usersCount },
+      meals: { data: meals, error: mealsError, count: mealsCount },
+      profiles: { data: profiles, error: profilesError, count: profilesCount }
     });
   } catch (err) {
     console.error('Debug error:', err);
