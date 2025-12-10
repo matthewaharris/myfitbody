@@ -4,7 +4,8 @@ import axios from 'axios';
 // For local development on Android emulator: http://10.0.2.2:3000
 // For iOS simulator: http://localhost:3000
 // For physical device: http://YOUR_COMPUTER_IP:3000
-const API_URL = 'http://192.168.86.39:3000/api';
+// For production: https://myfitbody-api.onrender.com/api
+const API_URL = 'https://myfitbody-api.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -114,8 +115,14 @@ export const updateMyProfile = async (profileData) => {
 
 // Daily stats
 export const getDailyStats = async (date) => {
-  const params = date ? { date } : {};
-  const response = await api.get('/stats/daily', { params });
+  // Always pass the client's local date to avoid timezone issues
+  const today = new Date();
+  const localDate = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const tzOffset = today.getTimezoneOffset(); // Minutes offset from UTC
+
+  const response = await api.get('/stats/daily', {
+    params: { date: localDate, tzOffset }
+  });
   return response.data;
 };
 

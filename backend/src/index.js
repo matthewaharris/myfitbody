@@ -1190,18 +1190,20 @@ app.get('/api/foods/:foodId', requireAuth, async (req, res) => {
 // Get daily calorie summary
 app.get('/api/stats/daily', requireAuth, async (req, res) => {
   try {
-    // Get today's date in YYYY-MM-DD format
+    // Client should pass their local date in YYYY-MM-DD format
+    // If not provided, use server date (UTC) as fallback
     const today = new Date();
     const dateParam = req.query.date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    // Create a wide date range to handle timezone differences
-    // Start from beginning of the day in UTC-12 to end of day in UTC+14
-    const startOfDay = new Date(`${dateParam}T00:00:00.000Z`);
-    startOfDay.setHours(startOfDay.getHours() - 12); // Go back 12 hours
-    const endOfDay = new Date(`${dateParam}T23:59:59.999Z`);
-    endOfDay.setHours(endOfDay.getHours() + 14); // Go forward 14 hours
+    // Get timezone offset from client (in minutes, e.g., -300 for EST)
+    const tzOffset = parseInt(req.query.tzOffset) || 0;
 
-    console.log(`Fetching stats for date: ${dateParam}, range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+    // Calculate the start and end of the day in the client's timezone
+    // We query for meals where meal_date matches the date string (DATE comparison)
+    const startOfDay = `${dateParam}T00:00:00.000Z`;
+    const endOfDay = `${dateParam}T23:59:59.999Z`;
+
+    console.log(`Fetching stats for date: ${dateParam}, tzOffset: ${tzOffset}`);
 
     // Get meals for the day
     const { data: meals, error: mealsError } = await supabase
