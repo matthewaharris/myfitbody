@@ -2907,6 +2907,8 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
     const { page = 1, limit = 20, search, status } = req.query;
     const offset = (page - 1) * limit;
 
+    console.log('Admin users request - page:', page, 'limit:', limit, 'search:', search, 'status:', status);
+
     // Select all columns to handle case where is_suspended doesn't exist yet
     let query = supabase
       .from('users')
@@ -2926,6 +2928,8 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
     const { data: users, count, error } = await query
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
+    console.log('Admin users result - count:', count, 'users length:', users?.length, 'error:', error);
 
     if (error) {
       console.error('Error fetching users:', error);
