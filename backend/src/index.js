@@ -2901,6 +2901,35 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   }
 });
 
+// Debug endpoint to test Supabase connection
+app.get('/api/admin/debug', requireAdmin, async (req, res) => {
+  try {
+    console.log('Debug: Testing Supabase connection...');
+    console.log('Debug: SUPABASE_URL =', process.env.SUPABASE_URL);
+    console.log('Debug: SERVICE_ROLE_KEY exists =', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('Debug: SERVICE_ROLE_KEY length =', process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
+
+    // Simple query with no filters
+    const { data, error, count } = await supabase
+      .from('users')
+      .select('id, email', { count: 'exact' });
+
+    console.log('Debug: Raw query result - data:', JSON.stringify(data), 'error:', error, 'count:', count);
+
+    res.json({
+      supabaseUrl: process.env.SUPABASE_URL,
+      serviceKeyExists: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+      data,
+      error,
+      count
+    });
+  } catch (err) {
+    console.error('Debug error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get users list with pagination and search
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
   try {
