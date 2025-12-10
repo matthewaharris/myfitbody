@@ -7,6 +7,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS suspension_reason TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by TEXT;
 
+-- Add admin flag to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+
 -- Add last_active tracking for users
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMPTZ;
 

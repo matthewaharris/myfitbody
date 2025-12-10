@@ -3228,6 +3228,28 @@ app.post('/api/admin/users/:userId/reset-password', requireAdmin, async (req, re
   }
 });
 
+// Toggle admin status for a user
+app.post('/api/admin/users/:userId/toggle-admin', requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isAdmin } = req.body;
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ is_admin: isAdmin })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, user: data });
+  } catch (error) {
+    console.error('Error toggling admin status:', error);
+    res.status(500).json({ error: 'Failed to update admin status' });
+  }
+});
+
 // Start server - bind to 0.0.0.0 to accept connections from other devices
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`MyFitBody API running on http://0.0.0.0:${PORT}`);

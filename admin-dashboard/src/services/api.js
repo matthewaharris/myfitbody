@@ -81,6 +81,11 @@ export const resetUserPassword = async (userId) => {
   return response.data;
 };
 
+export const toggleUserAdmin = async (userId, isAdmin) => {
+  const response = await api.post(`/users/${userId}/toggle-admin`, { isAdmin });
+  return response.data;
+};
+
 // Activity Logs
 export const getActivityLogs = async (params = {}) => {
   const response = await api.get('/activity-logs', { params });

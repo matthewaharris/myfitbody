@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getUserById, getUserActivity, suspendUser, unsuspendUser, deleteUser, resetUserPassword } from '../services/api';
+import { getUserById, getUserActivity, suspendUser, unsuspendUser, deleteUser, resetUserPassword, toggleUserAdmin } from '../services/api';
 
 const styles = {
   header: {
@@ -287,6 +287,25 @@ function UserDetailPage() {
     }
   };
 
+  const handleToggleAdmin = async () => {
+    const newAdminStatus = !user.is_admin;
+    const confirmMsg = newAdminStatus
+      ? 'Make this user an admin? They will have access to the admin dashboard.'
+      : 'Remove admin privileges from this user?';
+    if (!confirm(confirmMsg)) return;
+
+    setActionLoading(true);
+    try {
+      await toggleUserAdmin(userId, newAdminStatus);
+      setUser({ ...user, is_admin: newAdminStatus });
+      alert(newAdminStatus ? 'User is now an admin' : 'Admin privileges removed');
+    } catch (error) {
+      alert('Failed to update admin status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -343,6 +362,13 @@ function UserDetailPage() {
           >
             Reset Password
           </button>
+          <button
+            style={{ ...styles.button, backgroundColor: user.is_admin ? '#8b5cf6' : '#6b7280', color: '#fff' }}
+            onClick={handleToggleAdmin}
+            disabled={actionLoading}
+          >
+            {user.is_admin ? 'Remove Admin' : 'Make Admin'}
+          </button>
           {user.is_suspended ? (
             <button
               style={{ ...styles.button, ...styles.successButton }}
@@ -397,6 +423,16 @@ function UserDetailPage() {
               ...(user.is_suspended ? styles.statusSuspended : styles.statusActive),
             }}>
               {user.is_suspended ? 'Suspended' : 'Active'}
+            </span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Role</span>
+            <span style={{
+              ...styles.statusBadge,
+              backgroundColor: user.is_admin ? '#ede9fe' : '#f3f4f6',
+              color: user.is_admin ? '#6d28d9' : '#6b7280',
+            }}>
+              {user.is_admin ? 'Admin' : 'User'}
             </span>
           </div>
           <div style={styles.infoRow}>
