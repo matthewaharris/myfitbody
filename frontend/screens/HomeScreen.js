@@ -1,0 +1,794 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+  SafeAreaView,
+} from 'react-native';
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import { getDailyStats, getWorkouts, getMeals, getUserByClerkId, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions } from '../services/api';
+
+export default function HomeScreen({ onNavigate }) {
+  const { signOut, getToken } = useAuth();
+  const { user } = useUser();
+  const [dailyStats, setDailyStats] = useState(null);
+  const [recentWorkouts, setRecentWorkouts] = useState([]);
+  const [recentMeals, setRecentMeals] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [activityTab, setActivityTab] = useState('workouts'); // 'workouts' or 'meals'
+  const [userFirstName, setUserFirstName] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [calorieBurnSuggestions, setCalorieBurnSuggestions] = useState(null);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getFirstName = () => {
+    // First check our backend user data
+    if (userFirstName) return userFirstName;
+    // Then check Clerk user data
+    if (user?.firstName) return user.firstName;
+    // Fallback to email username
+    const email = user?.emailAddresses?.[0]?.emailAddress;
+    if (email) return email.split('@')[0];
+    return 'there';
+  };
+
+  const loadData = useCallback(async () => {
+    try {
+      const token = await getToken();
+      setAuthToken(token);
+      const email = user?.emailAddresses?.[0]?.emailAddress;
+      setUserInfo(user?.id, email);
+
+      const [stats, workouts, meals, userData, suggestionsData] = await Promise.all([
+        getDailyStats().catch(() => null),
+        getWorkouts(5).catch(() => []),
+        getMeals().catch(() => []),
+        getUserByClerkId(user?.id).catch(() => null),
+        getSmartSuggestions().catch(() => ({ suggestions: [] })),
+      ]);
+
+      setDailyStats(stats);
+      setRecentWorkouts(workouts || []);
+      setRecentMeals(meals || []);
+      setSuggestions(suggestionsData?.suggestions || []);
+      if (userData?.first_name) {
+        setUserFirstName(userData.first_name);
+      }
+
+      // Check if user is over calories and get burn suggestions
+      if (stats?.caloriesRemaining < 0 && Math.abs(stats.caloriesRemaining) > 100) {
+        const burnSuggestions = await getCalorieBurnSuggestions(Math.abs(stats.caloriesRemaining)).catch(() => null);
+        setCalorieBurnSuggestions(burnSuggestions);
+      } else {
+        setCalorieBurnSuggestions(null);
+      }
+    } catch (error) {
+      console.error('Error loading home data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getToken, user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const getWorkoutTotals = (workout) => {
+    if (!workout.workout_exercises || workout.workout_exercises.length === 0) {
+      return { exercises: 0, sets: 0, reps: 0 };
+    }
+
+    let totalSets = 0;
+    let totalReps = 0;
+
+    workout.workout_exercises.forEach((exercise) => {
+      // Sets is stored as a number (count of sets)
+      const sets = parseInt(exercise.sets) || 0;
+      const reps = parseInt(exercise.reps) || 0;
+      totalSets += sets;
+      // Total reps = sets * reps per set
+      totalReps += sets * reps;
+    });
+
+    return {
+      exercises: workout.workout_exercises.length,
+      sets: totalSets,
+      reps: totalReps,
+    };
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const getMealTypeIcon = (mealType) => {
+    switch (mealType) {
+      case 'breakfast': return '🌅';
+      case 'lunch': return '☀️';
+      case 'dinner': return '🌙';
+      case 'snack': return '🍎';
+      default: return '🍽️';
+    }
+  };
+
+  const formatMealType = (mealType) => {
+    if (!mealType) return 'Meal';
+    return mealType.charAt(0).toUpperCase() + mealType.slice(1);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>{getGreeting()},</Text>
+            <Text style={styles.userName}>{getFirstName()}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={() => onNavigate('profile')}
+          >
+            <Text style={styles.profileButtonText}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Today's Summary Card */}
+        <View style={styles.summaryCard}>
+          <Text style={styles.cardTitle}>Today's Summary</Text>
+          {loading ? (
+            <Text style={styles.loadingText}>Loading...</Text>
+          ) : dailyStats ? (
+            <>
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{dailyStats.consumed || 0}</Text>
+                  <Text style={styles.statLabel}>Eaten</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{dailyStats.burned || 0}</Text>
+                  <Text style={styles.statLabel}>Burned</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{dailyStats.remaining}</Text>
+                  <Text style={styles.statLabel}>Remaining</Text>
+                </View>
+              </View>
+              {dailyStats.workoutsLogged > 0 && (
+                <Text style={styles.workoutCount}>
+                  {dailyStats.workoutsLogged} workout{dailyStats.workoutsLogged !== 1 ? 's' : ''} today
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text style={styles.noDataText}>Start tracking to see your stats!</Text>
+          )}
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity
+            style={styles.primaryAction}
+            onPress={() => onNavigate('workout')}
+          >
+            <Text style={styles.actionIcon}>🏋️</Text>
+            <Text style={styles.primaryActionText}>Log Workout</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryAction}
+            onPress={() => onNavigate('meal')}
+          >
+            <Text style={styles.actionIcon}>🍽️</Text>
+            <Text style={styles.secondaryActionText}>Log Meal</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick Access Grid */}
+        <View style={styles.quickAccessGrid}>
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('progress')}
+          >
+            <Text style={styles.quickAccessIcon}>📊</Text>
+            <Text style={styles.quickAccessLabel}>Progress</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('water')}
+          >
+            <Text style={styles.quickAccessIcon}>💧</Text>
+            <Text style={styles.quickAccessLabel}>Water</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('stats')}
+          >
+            <Text style={styles.quickAccessIcon}>📈</Text>
+            <Text style={styles.quickAccessLabel}>Stats</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('recipes')}
+          >
+            <Text style={styles.quickAccessIcon}>📖</Text>
+            <Text style={styles.quickAccessLabel}>Recipes</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.quickAccessButton, styles.aiButton]}
+            onPress={() => onNavigate('ai')}
+          >
+            <Text style={styles.quickAccessIcon}>🤖</Text>
+            <Text style={styles.quickAccessLabel}>AI</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('mood')}
+          >
+            <Text style={styles.quickAccessIcon}>😊</Text>
+            <Text style={styles.quickAccessLabel}>Mood</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('badges')}
+          >
+            <Text style={styles.quickAccessIcon}>🏆</Text>
+            <Text style={styles.quickAccessLabel}>Badges</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
+            onPress={() => onNavigate('journal')}
+          >
+            <Text style={styles.quickAccessIcon}>📝</Text>
+            <Text style={styles.quickAccessLabel}>Journal</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Smart Suggestions */}
+        {(suggestions.length > 0 || calorieBurnSuggestions) && (
+          <View style={styles.suggestionsSection}>
+            <Text style={styles.sectionTitle}>Suggestions for You</Text>
+
+            {suggestions.map((suggestion, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.suggestionCard}
+                onPress={() => {
+                  if (suggestion.action === 'log_meal') onNavigate('meal');
+                  else if (suggestion.action === 'start_workout') onNavigate('workout');
+                  else if (suggestion.action === 'view_stats') onNavigate('stats');
+                }}
+              >
+                <View style={styles.suggestionContent}>
+                  <Text style={styles.suggestionTitle}>{suggestion.title}</Text>
+                  <Text style={styles.suggestionDescription}>{suggestion.description}</Text>
+                </View>
+                <Text style={styles.suggestionArrow}>→</Text>
+              </TouchableOpacity>
+            ))}
+
+            {calorieBurnSuggestions && calorieBurnSuggestions.suggestions?.length > 0 && (
+              <View style={styles.calorieBurnCard}>
+                <Text style={styles.calorieBurnTitle}>{calorieBurnSuggestions.message}</Text>
+                <View style={styles.calorieBurnOptions}>
+                  {calorieBurnSuggestions.suggestions.slice(0, 3).map((s, idx) => (
+                    <View key={idx} style={styles.calorieBurnOption}>
+                      <Text style={styles.calorieBurnIcon}>{s.icon}</Text>
+                      <Text style={styles.calorieBurnText}>{s.description}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Recent Activity */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+
+          {/* Tab Switcher */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activityTab === 'workouts' && styles.activeTab]}
+              onPress={() => setActivityTab('workouts')}
+            >
+              <Text style={[styles.tabText, activityTab === 'workouts' && styles.activeTabText]}>
+                Workouts
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activityTab === 'meals' && styles.activeTab]}
+              onPress={() => setActivityTab('meals')}
+            >
+              <Text style={[styles.tabText, activityTab === 'meals' && styles.activeTabText]}>
+                Meals
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Workouts Tab Content */}
+          {activityTab === 'workouts' && (
+            recentWorkouts.length > 0 ? (
+              recentWorkouts.map((workout) => {
+                const totals = getWorkoutTotals(workout);
+                return (
+                  <View key={workout.id} style={styles.activityItemContainer}>
+                    <TouchableOpacity
+                      style={styles.activityItem}
+                      onPress={() => onNavigate('workout', { workoutId: workout.id })}
+                    >
+                      <View style={styles.activityIcon}>
+                        <Text>💪</Text>
+                      </View>
+                      <View style={styles.activityInfo}>
+                        <Text style={styles.activityTitle}>
+                          {workout.name || 'Workout'}
+                        </Text>
+                        <Text style={styles.activityMeta}>
+                          {formatDate(workout.workout_date)}
+                          {workout.duration_minutes && ` • ${workout.duration_minutes} min`}
+                          {workout.estimated_calories_burned && ` • ${workout.estimated_calories_burned} kcal`}
+                        </Text>
+                        {totals.exercises > 0 && (
+                          <Text style={styles.activityStats}>
+                            {totals.exercises} exercise{totals.exercises !== 1 ? 's' : ''} • {totals.sets} set{totals.sets !== 1 ? 's' : ''} • {totals.reps} rep{totals.reps !== 1 ? 's' : ''}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.editIcon}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cloneButton}
+                      onPress={() => onNavigate('workout', { cloneFromId: workout.id })}
+                    >
+                      <Text style={styles.cloneButtonText}>Clone</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
+            ) : (
+              <View style={styles.emptyActivity}>
+                <Text style={styles.emptyIcon}>🎯</Text>
+                <Text style={styles.emptyText}>No workouts yet</Text>
+                <Text style={styles.emptySubtext}>
+                  Start your fitness journey by logging your first workout!
+                </Text>
+              </View>
+            )
+          )}
+
+          {/* Meals Tab Content */}
+          {activityTab === 'meals' && (
+            recentMeals.length > 0 ? (
+              recentMeals.map((meal) => (
+                <View key={meal.id} style={styles.activityItemContainer}>
+                  <View style={styles.activityItem}>
+                    <View style={styles.activityIcon}>
+                      <Text>{getMealTypeIcon(meal.meal_type)}</Text>
+                    </View>
+                    <View style={styles.activityInfo}>
+                      <Text style={styles.activityTitle}>
+                        {meal.food_name}
+                      </Text>
+                      <Text style={styles.activityMeta}>
+                        {formatMealType(meal.meal_type)} • {formatDate(meal.meal_date)}
+                        {meal.meal_date && ` • ${formatTime(meal.meal_date)}`}
+                      </Text>
+                      <Text style={styles.activityStats}>
+                        {meal.calories} kcal
+                        {meal.protein && ` • ${Math.round(meal.protein)}g P`}
+                        {meal.carbs && ` • ${Math.round(meal.carbs)}g C`}
+                        {meal.fat && ` • ${Math.round(meal.fat)}g F`}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyActivity}>
+                <Text style={styles.emptyIcon}>🍽️</Text>
+                <Text style={styles.emptyText}>No meals logged yet</Text>
+                <Text style={styles.emptySubtext}>
+                  Track your nutrition by logging what you eat!
+                </Text>
+              </View>
+            )
+          )}
+        </View>
+
+        {/* Sign Out Button */}
+        <TouchableOpacity style={styles.signOutButton} onPress={() => signOut()}>
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 20,
+    backgroundColor: '#fff',
+  },
+  greeting: {
+    fontSize: 16,
+    color: '#666',
+  },
+  userName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileButtonText: {
+    fontSize: 20,
+  },
+  summaryCard: {
+    backgroundColor: '#007AFF',
+    margin: 16,
+    borderRadius: 16,
+    padding: 20,
+  },
+  cardTitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 16,
+  },
+  loadingText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  statLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  noDataText: {
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  workoutCount: {
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 12,
+    marginBottom: 24,
+  },
+  primaryAction: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#007AFF',
+  },
+  secondaryAction: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  actionIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  primaryActionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  secondaryActionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  quickAccessGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 10,
+  },
+  quickAccessButton: {
+    width: '22%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  quickAccessIcon: {
+    fontSize: 24,
+    marginBottom: 6,
+  },
+  quickAccessLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+  },
+  section: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#333',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  activeTabText: {
+    color: '#007AFF',
+  },
+  activityItemContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  cloneButton: {
+    alignSelf: 'flex-start',
+    marginLeft: 52,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 14,
+  },
+  cloneButtonText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  activityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  activityMeta: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  activityStats: {
+    fontSize: 13,
+    color: '#007AFF',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  editIcon: {
+    fontSize: 24,
+    color: '#ccc',
+    marginLeft: 8,
+  },
+  emptyActivity: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyIcon: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  signOutButton: {
+    margin: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  signOutText: {
+    fontSize: 16,
+    color: '#FF3B30',
+  },
+  // AI Button
+  aiButton: {
+    backgroundColor: '#f0f0ff',
+    borderColor: '#007AFF',
+  },
+  // Suggestions styles
+  suggestionsSection: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  suggestionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 10,
+  },
+  suggestionContent: {
+    flex: 1,
+  },
+  suggestionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  suggestionDescription: {
+    fontSize: 13,
+    color: '#666',
+  },
+  suggestionArrow: {
+    fontSize: 18,
+    color: '#007AFF',
+    marginLeft: 8,
+  },
+  calorieBurnCard: {
+    backgroundColor: '#fff3e0',
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#ffb74d',
+  },
+  calorieBurnTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#e65100',
+    marginBottom: 10,
+  },
+  calorieBurnOptions: {
+    gap: 8,
+  },
+  calorieBurnOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  calorieBurnIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  calorieBurnText: {
+    fontSize: 14,
+    color: '#333',
+  },
+});

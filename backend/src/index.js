@@ -3250,6 +3250,609 @@ app.post('/api/admin/users/:userId/toggle-admin', requireAdmin, async (req, res)
   }
 });
 
+// =============================================
+// ENGAGEMENT FEATURES - MOOD CHECK-INS
+// =============================================
+
+// Create mood check-in
+app.post('/api/mood-checkins', requireAuth, async (req, res) => {
+  try {
+    const { mood_rating, energy_rating, notes, checkin_type, related_workout_id, related_meal_id } = req.body;
+
+    const { data, error } = await supabase
+      .from('mood_checkins')
+      .insert({
+        user_id: req.user.id,
+        mood_rating,
+        energy_rating,
+        notes,
+        checkin_type: checkin_type || 'general',
+        related_workout_id,
+        related_meal_id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Update user stats for checkin count
+    await supabase.rpc('increment_checkin_count', { p_user_id: req.user.id }).catch(() => {
+      // Ignore if function doesn't exist yet
+    });
+
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error creating mood check-in:', error);
+    res.status(500).json({ error: 'Failed to create mood check-in' });
+  }
+});
+
+// Get mood check-ins with optional date range
+app.get('/api/mood-checkins', requireAuth, async (req, res) => {
+  try {
+    const { start_date, end_date, limit = 30 } = req.query;
+
+    let query = supabase
+      .from('mood_checkins')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (start_date) {
+      query = query.gte('created_at', start_date);
+    }
+    if (end_date) {
+      query = query.lte('created_at', end_date);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching mood check-ins:', error);
+    res.status(500).json({ error: 'Failed to fetch mood check-ins' });
+  }
+});
+
+// Get mood trends/averages
+app.get('/api/mood-checkins/trends', requireAuth, async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabase
+      .from('mood_checkins')
+      .select('mood_rating, energy_rating, created_at')
+      .eq('user_id', req.user.id)
+      .gte('created_at', startDate)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    // Calculate averages and trends
+    const avgMood = data.length > 0
+      ? data.reduce((sum, c) => sum + c.mood_rating, 0) / data.length
+      : 0;
+    const avgEnergy = data.length > 0
+      ? data.reduce((sum, c) => sum + c.energy_rating, 0) / data.length
+      : 0;
+
+    // Group by date for chart data
+    const byDate = {};
+    data.forEach(c => {
+      const date = c.created_at.split('T')[0];
+      if (!byDate[date]) {
+        byDate[date] = { mood: [], energy: [] };
+      }
+      byDate[date].mood.push(c.mood_rating);
+      byDate[date].energy.push(c.energy_rating);
+    });
+
+    const chartData = Object.entries(byDate).map(([date, vals]) => ({
+      date,
+      avgMood: vals.mood.reduce((a, b) => a + b, 0) / vals.mood.length,
+      avgEnergy: vals.energy.reduce((a, b) => a + b, 0) / vals.energy.length
+    }));
+
+    res.json({
+      totalCheckins: data.length,
+      avgMood: Math.round(avgMood * 10) / 10,
+      avgEnergy: Math.round(avgEnergy * 10) / 10,
+      chartData
+    });
+  } catch (error) {
+    console.error('Error fetching mood trends:', error);
+    res.status(500).json({ error: 'Failed to fetch mood trends' });
+  }
+});
+
+// =============================================
+// ENGAGEMENT FEATURES - ACHIEVEMENT BADGES
+// =============================================
+
+// Get all badge definitions
+app.get('/api/badges/definitions', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('badge_definitions')
+      .select('*')
+      .order('category', { ascending: true })
+      .order('requirement_value', { ascending: true });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching badge definitions:', error);
+    res.status(500).json({ error: 'Failed to fetch badges' });
+  }
+});
+
+// Get user's earned badges
+app.get('/api/badges/earned', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_badges')
+      .select(`
+        *,
+        badge:badge_definitions(*)
+      `)
+      .eq('user_id', req.user.id)
+      .order('earned_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching earned badges:', error);
+    res.status(500).json({ error: 'Failed to fetch earned badges' });
+  }
+});
+
+// Get user's badge progress
+app.get('/api/badges/progress', requireAuth, async (req, res) => {
+  try {
+    // Get all badges
+    const { data: allBadges, error: badgesError } = await supabase
+      .from('badge_definitions')
+      .select('*');
+    if (badgesError) throw badgesError;
+
+    // Get user's earned badges
+    const { data: earnedBadges, error: earnedError } = await supabase
+      .from('user_badges')
+      .select('badge_id')
+      .eq('user_id', req.user.id);
+    if (earnedError) throw earnedError;
+
+    const earnedIds = new Set(earnedBadges.map(b => b.badge_id));
+
+    // Get user stats
+    const { data: stats, error: statsError } = await supabase
+      .from('user_stats')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .single();
+
+    const userStats = stats || {
+      total_workouts: 0,
+      total_meals: 0,
+      total_checkins: 0,
+      current_workout_streak: 0,
+      current_meal_streak: 0
+    };
+
+    // Calculate progress for each badge
+    const progress = allBadges.map(badge => {
+      const earned = earnedIds.has(badge.id);
+      let currentValue = 0;
+
+      switch (badge.requirement_metric) {
+        case 'workouts':
+          currentValue = userStats.total_workouts || 0;
+          break;
+        case 'meals':
+          currentValue = userStats.total_meals || 0;
+          break;
+        case 'checkins':
+          currentValue = userStats.total_checkins || 0;
+          break;
+        case 'workout_days':
+          currentValue = userStats.current_workout_streak || 0;
+          break;
+        case 'meal_days':
+          currentValue = userStats.current_meal_streak || 0;
+          break;
+        case 'water_goal':
+          currentValue = userStats.current_water_streak || 0;
+          break;
+        default:
+          currentValue = 0;
+      }
+
+      return {
+        ...badge,
+        earned,
+        currentValue,
+        progress: Math.min(100, Math.round((currentValue / badge.requirement_value) * 100))
+      };
+    });
+
+    res.json(progress);
+  } catch (error) {
+    console.error('Error fetching badge progress:', error);
+    res.status(500).json({ error: 'Failed to fetch badge progress' });
+  }
+});
+
+// Check and award badges (called after actions)
+app.post('/api/badges/check', requireAuth, async (req, res) => {
+  try {
+    // Get user stats
+    let { data: stats } = await supabase
+      .from('user_stats')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (!stats) {
+      // Create stats if not exist
+      const { data: newStats } = await supabase
+        .from('user_stats')
+        .insert({ user_id: req.user.id })
+        .select()
+        .single();
+      stats = newStats || { total_workouts: 0, total_meals: 0, total_checkins: 0 };
+    }
+
+    // Get all badge definitions
+    const { data: badges } = await supabase
+      .from('badge_definitions')
+      .select('*');
+
+    // Get user's already earned badges
+    const { data: earnedBadges } = await supabase
+      .from('user_badges')
+      .select('badge_id')
+      .eq('user_id', req.user.id);
+
+    const earnedIds = new Set(earnedBadges?.map(b => b.badge_id) || []);
+    const newBadges = [];
+
+    for (const badge of badges || []) {
+      if (earnedIds.has(badge.id)) continue;
+
+      let qualifies = false;
+      switch (badge.requirement_metric) {
+        case 'workouts':
+          qualifies = stats.total_workouts >= badge.requirement_value;
+          break;
+        case 'meals':
+          qualifies = stats.total_meals >= badge.requirement_value;
+          break;
+        case 'checkins':
+          qualifies = stats.total_checkins >= badge.requirement_value;
+          break;
+        case 'workout_days':
+          qualifies = stats.current_workout_streak >= badge.requirement_value;
+          break;
+        case 'meal_days':
+          qualifies = stats.current_meal_streak >= badge.requirement_value;
+          break;
+        case 'profile':
+          // Check if profile is complete
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('weight_goal, macro_targets')
+            .eq('user_id', req.user.id)
+            .single();
+          qualifies = profile?.weight_goal && profile?.macro_targets?.calories;
+          break;
+      }
+
+      if (qualifies) {
+        const { data: newBadge, error } = await supabase
+          .from('user_badges')
+          .insert({ user_id: req.user.id, badge_id: badge.id })
+          .select(`*, badge:badge_definitions(*)`)
+          .single();
+
+        if (!error && newBadge) {
+          newBadges.push(newBadge);
+        }
+      }
+    }
+
+    res.json({ newBadges, totalEarned: earnedIds.size + newBadges.length });
+  } catch (error) {
+    console.error('Error checking badges:', error);
+    res.status(500).json({ error: 'Failed to check badges' });
+  }
+});
+
+// =============================================
+// ENGAGEMENT FEATURES - JOURNAL ENTRIES
+// =============================================
+
+// Create or update journal entry for a date
+app.post('/api/journal', requireAuth, async (req, res) => {
+  try {
+    const { entry_date, title, content, mood_rating, tags } = req.body;
+    const dateToUse = entry_date || new Date().toISOString().split('T')[0];
+
+    // Generate auto-summary for the date
+    const autoSummary = await generateJournalAutoSummary(req.user.id, dateToUse);
+
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .upsert({
+        user_id: req.user.id,
+        entry_date: dateToUse,
+        title,
+        content,
+        mood_rating,
+        tags: tags || [],
+        auto_summary: autoSummary,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,entry_date'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error saving journal entry:', error);
+    res.status(500).json({ error: 'Failed to save journal entry' });
+  }
+});
+
+// Get journal entries
+app.get('/api/journal', requireAuth, async (req, res) => {
+  try {
+    const { start_date, end_date, limit = 30, favorites_only } = req.query;
+
+    let query = supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('entry_date', { ascending: false })
+      .limit(limit);
+
+    if (start_date) query = query.gte('entry_date', start_date);
+    if (end_date) query = query.lte('entry_date', end_date);
+    if (favorites_only === 'true') query = query.eq('is_favorite', true);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching journal entries:', error);
+    res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
+// Get single journal entry by date
+app.get('/api/journal/:date', requireAuth, async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    // Try to get existing entry
+    let { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .eq('entry_date', date)
+      .single();
+
+    // If no entry exists, generate auto-summary only
+    if (error && error.code === 'PGRST116') {
+      const autoSummary = await generateJournalAutoSummary(req.user.id, date);
+      data = {
+        entry_date: date,
+        title: null,
+        content: null,
+        mood_rating: null,
+        tags: [],
+        auto_summary: autoSummary,
+        is_favorite: false
+      };
+    } else if (error) {
+      throw error;
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching journal entry:', error);
+    res.status(500).json({ error: 'Failed to fetch journal entry' });
+  }
+});
+
+// Toggle journal favorite
+app.patch('/api/journal/:date/favorite', requireAuth, async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    const { data: existing } = await supabase
+      .from('journal_entries')
+      .select('is_favorite')
+      .eq('user_id', req.user.id)
+      .eq('entry_date', date)
+      .single();
+
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .update({ is_favorite: !existing?.is_favorite })
+      .eq('user_id', req.user.id)
+      .eq('entry_date', date)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error toggling favorite:', error);
+    res.status(500).json({ error: 'Failed to toggle favorite' });
+  }
+});
+
+// Helper function to generate auto-summary for a date
+async function generateJournalAutoSummary(userId, date) {
+  try {
+    const startOfDay = `${date}T00:00:00Z`;
+    const endOfDay = `${date}T23:59:59Z`;
+
+    // Get meals for the day
+    const { data: meals } = await supabase
+      .from('meals')
+      .select('name, meal_type, calories, protein, carbs, fat')
+      .eq('user_id', userId)
+      .gte('created_at', startOfDay)
+      .lte('created_at', endOfDay);
+
+    // Get workouts for the day
+    const { data: workouts } = await supabase
+      .from('workouts')
+      .select('duration_minutes, estimated_calories_burned, notes')
+      .eq('user_id', userId)
+      .gte('workout_date', startOfDay)
+      .lte('workout_date', endOfDay)
+      .or('is_template.is.null,is_template.eq.false');
+
+    // Get water intake for the day
+    const { data: water } = await supabase
+      .from('water_intake')
+      .select('amount_oz')
+      .eq('user_id', userId)
+      .gte('logged_at', startOfDay)
+      .lte('logged_at', endOfDay);
+
+    // Get mood check-ins for the day
+    const { data: moods } = await supabase
+      .from('mood_checkins')
+      .select('mood_rating, energy_rating')
+      .eq('user_id', userId)
+      .gte('created_at', startOfDay)
+      .lte('created_at', endOfDay);
+
+    // Calculate totals
+    const totalCalories = meals?.reduce((sum, m) => sum + (m.calories || 0), 0) || 0;
+    const totalProtein = meals?.reduce((sum, m) => sum + (m.protein || 0), 0) || 0;
+    const totalCarbs = meals?.reduce((sum, m) => sum + (m.carbs || 0), 0) || 0;
+    const totalFat = meals?.reduce((sum, m) => sum + (m.fat || 0), 0) || 0;
+    const totalWater = water?.reduce((sum, w) => sum + (w.amount_oz || 0), 0) || 0;
+    const totalWorkoutMinutes = workouts?.reduce((sum, w) => sum + (w.duration_minutes || 0), 0) || 0;
+    const totalCaloriesBurned = workouts?.reduce((sum, w) => sum + (w.estimated_calories_burned || 0), 0) || 0;
+    const avgMood = moods?.length > 0
+      ? moods.reduce((sum, m) => sum + m.mood_rating, 0) / moods.length
+      : null;
+    const avgEnergy = moods?.length > 0
+      ? moods.reduce((sum, m) => sum + m.energy_rating, 0) / moods.length
+      : null;
+
+    return {
+      meals: {
+        count: meals?.length || 0,
+        items: meals?.map(m => ({ name: m.name, type: m.meal_type, calories: m.calories })) || [],
+        totalCalories,
+        totalProtein: Math.round(totalProtein),
+        totalCarbs: Math.round(totalCarbs),
+        totalFat: Math.round(totalFat)
+      },
+      workouts: {
+        count: workouts?.length || 0,
+        totalMinutes: totalWorkoutMinutes,
+        totalCaloriesBurned
+      },
+      water: {
+        totalOz: totalWater
+      },
+      mood: {
+        checkinsCount: moods?.length || 0,
+        avgMood: avgMood ? Math.round(avgMood * 10) / 10 : null,
+        avgEnergy: avgEnergy ? Math.round(avgEnergy * 10) / 10 : null
+      }
+    };
+  } catch (error) {
+    console.error('Error generating auto-summary:', error);
+    return {};
+  }
+}
+
+// =============================================
+// ENGAGEMENT FEATURES - NOTIFICATION SETTINGS
+// =============================================
+
+// Get user's reminder settings
+app.get('/api/reminders/settings', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('reminder_settings')
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (error) throw error;
+    res.json(data?.reminder_settings || {});
+  } catch (error) {
+    console.error('Error fetching reminder settings:', error);
+    res.status(500).json({ error: 'Failed to fetch reminder settings' });
+  }
+});
+
+// Update reminder settings
+app.put('/api/reminders/settings', requireAuth, async (req, res) => {
+  try {
+    const { reminder_settings } = req.body;
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update({ reminder_settings })
+      .eq('user_id', req.user.id)
+      .select('reminder_settings')
+      .single();
+
+    if (error) throw error;
+    res.json(data?.reminder_settings);
+  } catch (error) {
+    console.error('Error updating reminder settings:', error);
+    res.status(500).json({ error: 'Failed to update reminder settings' });
+  }
+});
+
+// Get user stats
+app.get('/api/stats/user', requireAuth, async (req, res) => {
+  try {
+    let { data, error } = await supabase
+      .from('user_stats')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // No stats yet, return defaults
+      data = {
+        total_workouts: 0,
+        total_meals: 0,
+        total_checkins: 0,
+        current_workout_streak: 0,
+        longest_workout_streak: 0,
+        current_meal_streak: 0,
+        longest_meal_streak: 0
+      };
+    } else if (error) {
+      throw error;
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Failed to fetch user stats' });
+  }
+});
+
 // Start server - bind to 0.0.0.0 to accept connections from other devices
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`MyFitBody API running on http://0.0.0.0:${PORT}`);
