@@ -2772,9 +2772,13 @@ app.get('/api/admin/verify', requireAdmin, (req, res) => {
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   try {
     // Get total users
-    const { count: totalUsers } = await supabase
+    const { count: totalUsers, error: usersError } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true });
+
+    if (usersError) {
+      console.error('Error fetching total users:', usersError);
+    }
 
     // Get new users this week
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -2903,14 +2907,16 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
     const { page = 1, limit = 20, search, status } = req.query;
     const offset = (page - 1) * limit;
 
+    // Select all columns to handle case where is_suspended doesn't exist yet
     let query = supabase
       .from('users')
-      .select('id, email, first_name, last_name, phone_number, created_at, is_suspended', { count: 'exact' });
+      .select('*', { count: 'exact' });
 
     if (search) {
       query = query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
     }
 
+    // Only filter by status if explicitly requested (in case column doesn't exist)
     if (status === 'suspended') {
       query = query.eq('is_suspended', true);
     } else if (status === 'active') {
@@ -2921,7 +2927,10 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
 
     // Get workout and meal counts for each user
     const usersWithStats = await Promise.all(users.map(async (user) => {
