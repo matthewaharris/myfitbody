@@ -20,6 +20,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   searchFoods,
   createMeal,
+  updateMeal,
   setAuthToken,
   setUserInfo,
   getFavoriteMeals,
@@ -27,6 +28,7 @@ import {
   relogMeal,
   lookupBarcode,
 } from '../services/api';
+import api from '../services/api';
 
 // Unit conversion constants
 const CONVERSIONS = {
@@ -355,18 +357,21 @@ function FoodSearchModal({ visible, onClose, onSelect, favoriteMeals, onRelogFav
 }
 
 // Main Meal Screen
-export default function MealScreen({ onNavigate }) {
+export default function MealScreen({ onNavigate, editMealId, mealType: initialMealType, date: initialDate }) {
   const { getToken } = useAuth();
   const { user } = useUser();
 
   const [showFoodSearch, setShowFoodSearch] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
-  const [mealType, setMealType] = useState('lunch');
+  const [mealType, setMealType] = useState(initialMealType || 'lunch');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [lastSavedMealId, setLastSavedMealId] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
+  const [isEditMode, setIsEditMode] = useState(!!editMealId);
+  const [editingMealId, setEditingMealId] = useState(editMealId);
+  const [loadingMeal, setLoadingMeal] = useState(!!editMealId);
 
   // Serving size state
   const [servingAmount, setServingAmount] = useState('1');
@@ -391,15 +396,22 @@ export default function MealScreen({ onNavigate }) {
     setupAuth();
   }, []);
 
-  // Reset serving inputs when food changes
+  // Load meal data if editing
   useEffect(() => {
-    if (selectedFood) {
+    if (editMealId) {
+      loadMealForEditing(editMealId);
+    }
+  }, [editMealId]);
+
+  // Reset serving inputs when food changes (but not when loading for edit)
+  useEffect(() => {
+    if (selectedFood && !loadingMeal) {
       setServingAmount('1');
       setCustomServingSize(selectedFood.servingSize?.toString() || '100');
       setSelectedUnit('g');
       setUseCustomServing(false);
     }
-  }, [selectedFood]);
+  }, [selectedFood, loadingMeal]);
 
   const setupAuth = async () => {
     const token = await getToken();
@@ -413,6 +425,37 @@ export default function MealScreen({ onNavigate }) {
       setFavoriteMeals(favorites || []);
     } catch (error) {
       console.error('Error loading favorite meals:', error);
+    }
+  };
+
+  const loadMealForEditing = async (mealId) => {
+    try {
+      setLoadingMeal(true);
+      const response = await api.get(`/meals/${mealId}`);
+      const meal = response.data;
+
+      // Set the form with meal data
+      setSelectedFood({
+        name: meal.food_name,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        servingSize: meal.serving_size || 100,
+        servingUnit: meal.serving_unit || 'g',
+      });
+      setMealType(meal.meal_type || 'lunch');
+      setNotes(meal.notes || '');
+      setIsFavorite(meal.is_favorite || false);
+      setCustomServingSize(meal.serving_size?.toString() || '100');
+      setSelectedUnit(meal.serving_unit || 'g');
+      setUseCustomServing(true);
+    } catch (error) {
+      console.error('Error loading meal for editing:', error);
+      Alert.alert('Error', 'Failed to load meal');
+      onNavigate('home');
+    } finally {
+      setLoadingMeal(false);
     }
   };
 
@@ -475,7 +518,7 @@ export default function MealScreen({ onNavigate }) {
     setSaving(true);
 
     try {
-      const savedMeal = await createMeal({
+      const mealData = {
         meal_type: mealType,
         food_name: selectedFood.name,
         calories: nutrients.calories,
@@ -487,18 +530,28 @@ export default function MealScreen({ onNavigate }) {
         serving_size: nutrients.servingSizeGrams,
         serving_unit: 'g',
         notes: notes || null,
-      });
+      };
 
-      setLastSavedMealId(savedMeal.id);
-      setIsFavorite(savedMeal.is_favorite || false);
-
-      Alert.alert('Success', 'Meal logged!', [
-        { text: 'Log Another', onPress: resetForm },
-        { text: 'Done', onPress: () => onNavigate('home') },
-      ]);
+      let savedMeal;
+      if (isEditMode && editingMealId) {
+        // Update existing meal
+        savedMeal = await updateMeal(editingMealId, mealData);
+        Alert.alert('Success', 'Meal updated!', [
+          { text: 'Done', onPress: () => onNavigate('home') },
+        ]);
+      } else {
+        // Create new meal
+        savedMeal = await createMeal(mealData);
+        setLastSavedMealId(savedMeal.id);
+        setIsFavorite(savedMeal.is_favorite || false);
+        Alert.alert('Success', 'Meal logged!', [
+          { text: 'Log Another', onPress: resetForm },
+          { text: 'Done', onPress: () => onNavigate('home') },
+        ]);
+      }
     } catch (error) {
       console.error('Error saving meal:', error);
-      Alert.alert('Error', 'Failed to save meal');
+      Alert.alert('Error', isEditMode ? 'Failed to update meal' : 'Failed to save meal');
     } finally {
       setSaving(false);
     }
@@ -553,16 +606,27 @@ export default function MealScreen({ onNavigate }) {
 
   const nutrients = calculateNutrients();
 
+  if (loadingMeal) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Loading meal...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => onNavigate('home')}>
           <Text style={styles.cancelButton}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Log Meal</Text>
+        <Text style={styles.headerTitle}>{isEditMode ? 'Edit Meal' : 'Log Meal'}</Text>
         <TouchableOpacity onPress={handleSaveMeal} disabled={saving || !selectedFood}>
           <Text style={[styles.saveButton, (!selectedFood || saving) && { opacity: 0.5 }]}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Saving...' : (isEditMode ? 'Update' : 'Save')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -895,6 +959,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
   },
   header: {
     flexDirection: 'row',

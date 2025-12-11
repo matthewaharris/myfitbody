@@ -7,9 +7,10 @@ import {
   ScrollView,
   RefreshControl,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { getDailyStats, getWorkouts, getMeals, getUserByClerkId, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions } from '../services/api';
+import { getDailyStats, getWorkouts, getMeals, getUserByClerkId, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions, deleteMeal } from '../services/api';
 
 export default function HomeScreen({ onNavigate }) {
   const { signOut, getToken } = useAuth();
@@ -89,6 +90,29 @@ export default function HomeScreen({ onNavigate }) {
     setRefreshing(false);
   }, [loadData]);
 
+  const handleDeleteMeal = (meal) => {
+    Alert.alert(
+      'Delete Meal',
+      `Are you sure you want to delete "${meal.food_name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMeal(meal.id);
+              await loadData(); // Refresh the list
+            } catch (error) {
+              console.error('Error deleting meal:', error);
+              Alert.alert('Error', 'Failed to delete meal');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -144,6 +168,41 @@ export default function HomeScreen({ onNavigate }) {
     if (!mealType) return 'Meal';
     return mealType.charAt(0).toUpperCase() + mealType.slice(1);
   };
+
+  // Group meals by day and then by meal type
+  const groupMealsByDayAndType = (meals) => {
+    const grouped = {};
+    const mealTypeOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+    meals.forEach(meal => {
+      const dateKey = meal.meal_date ? meal.meal_date.split('T')[0] : 'unknown';
+      const mealType = meal.meal_type || 'other';
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {};
+      }
+      if (!grouped[dateKey][mealType]) {
+        grouped[dateKey][mealType] = [];
+      }
+      grouped[dateKey][mealType].push(meal);
+    });
+
+    // Convert to array sorted by date (newest first), with meal types in order
+    return Object.entries(grouped)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, mealTypes]) => ({
+        date,
+        mealTypes: mealTypeOrder
+          .filter(type => mealTypes[type])
+          .map(type => ({
+            type,
+            meals: mealTypes[type],
+            totalCalories: mealTypes[type].reduce((sum, m) => sum + (m.calories || 0), 0)
+          }))
+      }));
+  };
+
+  const groupedMeals = groupMealsByDayAndType(recentMeals);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -403,29 +462,42 @@ export default function HomeScreen({ onNavigate }) {
 
           {/* Meals Tab Content */}
           {activityTab === 'meals' && (
-            recentMeals.length > 0 ? (
-              recentMeals.map((meal) => (
-                <View key={meal.id} style={styles.activityItemContainer}>
-                  <View style={styles.activityItem}>
-                    <View style={styles.activityIcon}>
-                      <Text>{getMealTypeIcon(meal.meal_type)}</Text>
+            groupedMeals.length > 0 ? (
+              groupedMeals.map((dayGroup) => (
+                <View key={dayGroup.date} style={styles.dayGroup}>
+                  <Text style={styles.dayGroupHeader}>{formatDate(dayGroup.date)}</Text>
+                  {dayGroup.mealTypes.map((mealTypeGroup) => (
+                    <View key={`${dayGroup.date}-${mealTypeGroup.type}`} style={styles.mealTypeGroup}>
+                      <View style={styles.mealTypeHeader}>
+                        <Text style={styles.mealTypeIcon}>{getMealTypeIcon(mealTypeGroup.type)}</Text>
+                        <Text style={styles.mealTypeTitle}>{formatMealType(mealTypeGroup.type)}</Text>
+                        <Text style={styles.mealTypeCalories}>{mealTypeGroup.totalCalories} kcal</Text>
+                        <TouchableOpacity
+                          style={styles.addToMealButton}
+                          onPress={() => onNavigate('meal', { mealType: mealTypeGroup.type, date: dayGroup.date })}
+                        >
+                          <Text style={styles.addToMealButtonText}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {mealTypeGroup.meals.map((meal) => (
+                        <View key={meal.id} style={styles.mealItem}>
+                          <TouchableOpacity
+                            style={styles.mealItemContent}
+                            onPress={() => onNavigate('meal', { editMealId: meal.id })}
+                          >
+                            <Text style={styles.mealItemName}>{meal.food_name}</Text>
+                            <Text style={styles.mealItemCalories}>{meal.calories} kcal</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.deleteMealButton}
+                            onPress={() => handleDeleteMeal(meal)}
+                          >
+                            <Text style={styles.deleteMealButtonText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
                     </View>
-                    <View style={styles.activityInfo}>
-                      <Text style={styles.activityTitle}>
-                        {meal.food_name}
-                      </Text>
-                      <Text style={styles.activityMeta}>
-                        {formatMealType(meal.meal_type)} • {formatDate(meal.meal_date)}
-                        {meal.meal_date && ` • ${formatTime(meal.meal_date)}`}
-                      </Text>
-                      <Text style={styles.activityStats}>
-                        {meal.calories} kcal
-                        {meal.protein && ` • ${Math.round(meal.protein)}g P`}
-                        {meal.carbs && ` • ${Math.round(meal.carbs)}g C`}
-                        {meal.fat && ` • ${Math.round(meal.fat)}g F`}
-                      </Text>
-                    </View>
-                  </View>
+                  ))}
                 </View>
               ))
             ) : (
@@ -790,5 +862,102 @@ const styles = StyleSheet.create({
   calorieBurnText: {
     fontSize: 14,
     color: '#333',
+  },
+  // Grouped meals styles
+  dayGroup: {
+    marginBottom: 16,
+  },
+  dayGroupHeader: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4CAF50',
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  mealTypeGroup: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  mealTypeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  mealTypeIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  mealTypeTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  mealTypeCalories: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  mealItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  mealItemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flex: 1,
+    paddingVertical: 4,
+    paddingRight: 8,
+  },
+  mealItemName: {
+    fontSize: 14,
+    color: '#555',
+    flex: 1,
+  },
+  mealItemCalories: {
+    fontSize: 13,
+    color: '#888',
+  },
+  deleteMealButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ffebee',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteMealButtonText: {
+    fontSize: 12,
+    color: '#f44336',
+    fontWeight: '600',
+  },
+  addToMealButton: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  addToMealButtonText: {
+    fontSize: 18,
+    color: '#4CAF50',
+    fontWeight: '600',
+    lineHeight: 22,
   },
 });

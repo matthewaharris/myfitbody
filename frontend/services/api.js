@@ -214,6 +214,16 @@ export const createMeal = async (mealData) => {
   return response.data;
 };
 
+export const updateMeal = async (mealId, mealData) => {
+  const response = await api.patch(`/meals/${mealId}`, mealData);
+  return response.data;
+};
+
+export const deleteMeal = async (mealId) => {
+  const response = await api.delete(`/meals/${mealId}`);
+  return response.data;
+};
+
 // Meal Favorites
 export const getFavoriteMeals = async () => {
   const response = await api.get('/meals/favorites');

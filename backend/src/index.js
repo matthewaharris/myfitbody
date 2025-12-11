@@ -905,6 +905,26 @@ app.post('/api/meals', requireAuth, async (req, res) => {
 
 // --- MEAL FAVORITES ---
 
+// Get single meal by ID
+app.get('/api/meals/:mealId', requireAuth, async (req, res) => {
+  try {
+    const { mealId } = req.params;
+
+    const { data, error } = await supabase
+      .from('meals')
+      .select('*')
+      .eq('id', mealId)
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching meal:', error);
+    res.status(500).json({ error: 'Failed to fetch meal' });
+  }
+});
+
 // Get favorite meals
 app.get('/api/meals/favorites', requireAuth, async (req, res) => {
   try {
@@ -920,6 +940,57 @@ app.get('/api/meals/favorites', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching favorite meals:', error);
     res.status(500).json({ error: 'Failed to fetch favorite meals' });
+  }
+});
+
+// Update a meal
+app.patch('/api/meals/:mealId', requireAuth, async (req, res) => {
+  try {
+    const { mealId } = req.params;
+    const { food_name, calories, protein, carbs, fat, meal_type, serving_size, serving_unit } = req.body;
+
+    const updateData = {};
+    if (food_name !== undefined) updateData.food_name = food_name;
+    if (calories !== undefined) updateData.calories = calories;
+    if (protein !== undefined) updateData.protein = protein;
+    if (carbs !== undefined) updateData.carbs = carbs;
+    if (fat !== undefined) updateData.fat = fat;
+    if (meal_type !== undefined) updateData.meal_type = meal_type;
+    if (serving_size !== undefined) updateData.serving_size = serving_size;
+    if (serving_unit !== undefined) updateData.serving_unit = serving_unit;
+
+    const { data, error } = await supabase
+      .from('meals')
+      .update(updateData)
+      .eq('id', mealId)
+      .eq('user_id', req.user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating meal:', error);
+    res.status(500).json({ error: 'Failed to update meal' });
+  }
+});
+
+// Delete a meal
+app.delete('/api/meals/:mealId', requireAuth, async (req, res) => {
+  try {
+    const { mealId } = req.params;
+
+    const { error } = await supabase
+      .from('meals')
+      .delete()
+      .eq('id', mealId)
+      .eq('user_id', req.user.id);
+
+    if (error) throw error;
+    res.json({ success: true, message: 'Meal deleted' });
+  } catch (error) {
+    console.error('Error deleting meal:', error);
+    res.status(500).json({ error: 'Failed to delete meal' });
   }
 });
 

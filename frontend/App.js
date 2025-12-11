@@ -351,7 +351,12 @@ function MainApp() {
 
     // Meal logging screen
     if (appScreen === 'meal') {
-      return <MealScreen onNavigate={navigate} />;
+      return <MealScreen
+        onNavigate={navigate}
+        editMealId={navParams.editMealId}
+        mealType={navParams.mealType}
+        date={navParams.date}
+      />;
     }
 
     // Progress/Measurements screen
