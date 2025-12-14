@@ -905,6 +905,24 @@ app.post('/api/meals', requireAuth, async (req, res) => {
 
 // --- MEAL FAVORITES ---
 
+// Get favorite meals (must be before :mealId route to avoid matching "favorites" as a UUID)
+app.get('/api/meals/favorites', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('meals')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .eq('is_favorite', true)
+      .order('food_name');
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching favorite meals:', error);
+    res.status(500).json({ error: 'Failed to fetch favorite meals' });
+  }
+});
+
 // Get single meal by ID
 app.get('/api/meals/:mealId', requireAuth, async (req, res) => {
   try {
@@ -922,24 +940,6 @@ app.get('/api/meals/:mealId', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching meal:', error);
     res.status(500).json({ error: 'Failed to fetch meal' });
-  }
-});
-
-// Get favorite meals
-app.get('/api/meals/favorites', requireAuth, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('meals')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .eq('is_favorite', true)
-      .order('food_name');
-
-    if (error) throw error;
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching favorite meals:', error);
-    res.status(500).json({ error: 'Failed to fetch favorite meals' });
   }
 });
 
