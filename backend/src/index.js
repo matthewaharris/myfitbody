@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { supabase } from './utils/supabase.js';
 import { requireAuth } from './middleware/auth.js';
 import { sendPushNotification, NotificationTemplates } from './utils/pushNotifications.js';
+import { extractNutrients } from './utils/nutrients.js';
 
 dotenv.config();
 
@@ -1160,35 +1161,7 @@ app.get('/api/foods/search', requireAuth, async (req, res) => {
   }
 });
 
-// Helper function to extract nutrients from USDA food data
-function extractNutrients(nutrients) {
-  const nutrientMap = {
-    1008: 'calories',    // Energy (kcal)
-    1003: 'protein',     // Protein
-    1005: 'carbs',       // Carbohydrates
-    1004: 'fat',         // Total fat
-    1079: 'fiber',       // Fiber
-    2000: 'sugar',       // Total sugars
-  };
-
-  const result = {
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-    fiber: 0,
-    sugar: 0,
-  };
-
-  nutrients.forEach(n => {
-    const key = nutrientMap[n.nutrientId];
-    if (key) {
-      result[key] = Math.round((n.value || 0) * 10) / 10;
-    }
-  });
-
-  return result;
-}
+// extractNutrients is imported from ./utils/nutrients.js
 
 // Get food details by ID
 app.get('/api/foods/:foodId', requireAuth, async (req, res) => {
@@ -3927,8 +3900,14 @@ app.get('/api/stats/user', requireAuth, async (req, res) => {
 });
 
 // Start server - bind to 0.0.0.0 to accept connections from other devices
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`MyFitBody API running on http://0.0.0.0:${PORT}`);
-  console.log(`For mobile devices, use: http://<YOUR_IP>:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-});
+// Only start listening if not in test mode (allows supertest to work)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`MyFitBody API running on http://0.0.0.0:${PORT}`);
+    console.log(`For mobile devices, use: http://<YOUR_IP>:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+  });
+}
+
+// Export app for testing
+export { app };
