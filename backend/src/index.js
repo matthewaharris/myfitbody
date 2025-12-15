@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { supabase } from './utils/supabase.js';
 import { requireAuth } from './middleware/auth.js';
+import { requireAdmin, generateAdminToken } from './middleware/admin.js';
 import { sendPushNotification, NotificationTemplates } from './utils/pushNotifications.js';
 import { extractNutrients } from './utils/nutrients.js';
 
@@ -2764,27 +2764,8 @@ app.post('/api/ai/calorie-burn-suggestion', requireAuth, async (req, res) => {
 // ADMIN API ENDPOINTS
 // =============================================
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'your-admin-secret-change-this';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@myfitbody.app';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || crypto.createHash('sha256').update('admin123').digest('hex');
-
-// Admin auth middleware
-const requireAdmin = (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-    const decoded = jwt.verify(token, ADMIN_SECRET);
-    if (!decoded.isAdmin) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
-    req.admin = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
 
 // Admin login
 app.post('/api/admin/login', async (req, res) => {
@@ -2796,12 +2777,7 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign(
-      { email, isAdmin: true },
-      ADMIN_SECRET,
-      { expiresIn: '24h' }
-    );
-
+    const token = generateAdminToken(email);
     res.json({ token, admin: { email } });
   } catch (error) {
     console.error('Admin login error:', error);
