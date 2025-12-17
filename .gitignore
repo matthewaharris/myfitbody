@@ -45,3 +45,12 @@ coverage/
 .cache/
 tmp/
 temp/
+
+# Claude Code
+.claude/
+
+# Local data
+data/
+
+# Windows artifacts
+nul
