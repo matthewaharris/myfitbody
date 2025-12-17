@@ -19,6 +19,19 @@ A fitness tracking mobile app with admin dashboard built with:
 | Admin Dashboard | https://myfitbody-admin.onrender.com |
 | Supabase | https://jbmcwxkvoipbismtdzrj.supabase.co |
 
+## How to Run the App
+
+**IMPORTANT**: Only the frontend runs locally. Backend is deployed on Render and runs automatically.
+
+```bash
+cd C:\Users\mharr\stait\myfitbody\frontend
+npx expo start -c --tunnel
+```
+
+- Use `--tunnel` flag (required - normal Expo connection often fails)
+- `-c` clears cache (helpful after file changes)
+- Backend auto-deploys on git push to main
+
 ## Current Working Features
 
 ### Mobile App Features
@@ -41,11 +54,21 @@ A fitness tracking mobile app with admin dashboard built with:
 #### Home Dashboard
 - Time-based greeting
 - Daily calorie summary (consumed, burned, net, remaining)
-- Recent workouts list
-- Recent meals list
+- Recent workouts list with grouped display
+- Recent meals grouped by day and meal type (Breakfast, Lunch, Dinner, Snack)
+- **Meal Quick Actions**:
+  - Delete button (✕) on each meal with confirmation
+  - Tap meal to edit (opens MealScreen with pre-filled data)
+  - Add button (+) per meal type for quick logging
 - Smart AI suggestions based on time of day and user patterns
 - Calorie burn suggestions when over goal
-- Quick access to AI features
+- Quick access to engagement features (Mood, Badges, Journal, Reminders)
+
+#### Engagement Features (NEW)
+- **Mood/Energy Check-ins**: 1-5 scale with emojis, 30-day trends, notes
+- **Achievement Badges**: 20+ badges across categories (milestone, workout, nutrition, streak, special)
+- **Daily Journal**: Per-date entries with title, content, mood, tags + auto-generated activity summary
+- **Reminder Settings**: Configurable reminders for meals, workouts, water, mood check-ins
 
 #### AI-Powered Features
 - **AI Workout Generator**: Custom workouts based on duration, focus, equipment, difficulty
@@ -62,9 +85,12 @@ A fitness tracking mobile app with admin dashboard built with:
 
 #### Meal Logging
 - Food search with USDA + Open Food Facts APIs
+- Barcode scanner for quick food lookup
 - Full macro tracking (calories, protein, carbs, fat, fiber, sugar)
 - Food validation using OpenFoodFacts API
-- Meal favorites
+- Meal favorites with quick re-log
+- **Edit existing meals** (tap to edit from Recent Activity)
+- **Delete meals** (with confirmation dialog)
 
 #### Additional Features
 - Water intake tracking
@@ -110,6 +136,7 @@ A fitness tracking mobile app with admin dashboard built with:
 - @clerk/clerk-expo 2.19.4
 - Axios 1.13.2
 - expo-secure-store 15.0.7
+- expo-camera (for barcode scanning)
 
 ### Admin Dashboard
 - React 18
@@ -127,7 +154,7 @@ A fitness tracking mobile app with admin dashboard built with:
 
 ### Database Tables
 - `users` - Core user data with Clerk ID, suspension status, admin flag
-- `user_profiles` - Goals, restrictions, macro targets, food preferences
+- `user_profiles` - Goals, restrictions, macro targets, food preferences, reminder_settings JSONB
 - `exercises` - System and custom exercises
 - `workouts` - Workout sessions
 - `workout_exercises` - Junction table for workout details
@@ -139,19 +166,27 @@ A fitness tracking mobile app with admin dashboard built with:
 - `ai_generated_workouts` - AI workout history
 - `ai_generated_recipes` - AI recipe history
 - `admin_audit_log` - Admin action tracking
+- `mood_checkins` - Mood/energy ratings with notes
+- `badge_definitions` - 20+ achievement badge definitions
+- `user_badges` - Junction table for earned badges
+- `journal_entries` - Daily journal with auto_summary JSONB
+- `user_stats` - Running totals (workouts, meals, streaks)
+- `notification_history` - Push notification tracking
 
 ## File Structure
 ```
 C:\Users\mharr\stait\myfitbody\
 ├── backend/
 │   ├── src/
-│   │   ├── index.js              # Express server with all API routes
+│   │   ├── index.js              # Express server (~4000 lines, all API routes)
 │   │   ├── middleware/
 │   │   │   └── auth.js           # Clerk authentication middleware
 │   │   └── utils/
 │   │       ├── supabase.js       # Supabase client configuration
 │   │       └── pushNotifications.js  # Expo push notification helper
-│   ├── migrations/               # Database migrations (002-007)
+│   ├── migrations/
+│   │   ├── 007_admin_features.sql    # is_suspended, is_admin, audit log
+│   │   └── 008_engagement_features.sql # mood, badges, journal, stats tables
 │   ├── schema.sql                # Database schema with RLS
 │   ├── package.json
 │   └── .env                      # Environment variables
@@ -160,11 +195,15 @@ C:\Users\mharr\stait\myfitbody\
 │   ├── App.js                    # Main app with Clerk Provider and navigation
 │   ├── screens/
 │   │   ├── ProfileSetupWizard.js # 6-step profile setup flow
-│   │   ├── HomeScreen.js         # Dashboard with AI suggestions
+│   │   ├── HomeScreen.js         # Dashboard with meal grouping, delete/edit/add
 │   │   ├── WorkoutScreen.js      # Workout logging
-│   │   ├── MealScreen.js         # Meal logging with food search
+│   │   ├── MealScreen.js         # Meal logging with edit mode support
 │   │   ├── ProfileScreen.js      # Profile editing + account deletion
-│   │   └── AIScreen.js           # AI workout/recipe generator
+│   │   ├── AIScreen.js           # AI workout/recipe generator
+│   │   ├── MoodCheckinScreen.js  # Mood/energy check-ins with trends
+│   │   ├── BadgesScreen.js       # Achievement badges with progress
+│   │   ├── JournalScreen.js      # Daily journal with auto-summary
+│   │   └── ReminderSettingsScreen.js # Push notification settings
 │   ├── services/
 │   │   ├── api.js                # Axios API client with all endpoints
 │   │   └── notifications.js      # Push notification registration
@@ -196,6 +235,31 @@ C:\Users\mharr\stait\myfitbody\
 │
 └── PROJECT_STATUS.md             # This file
 ```
+
+## Key API Endpoints
+
+### Meal CRUD (recently added)
+- `GET /api/meals` - List meals with optional date filter
+- `GET /api/meals/:mealId` - Get single meal by ID
+- `POST /api/meals` - Create new meal
+- `PATCH /api/meals/:mealId` - Update meal
+- `DELETE /api/meals/:mealId` - Delete meal
+
+### Engagement Features
+- `POST /api/mood-checkins` - Create mood check-in
+- `GET /api/mood-checkins` - List check-ins
+- `GET /api/mood-checkins/trends` - Mood trends with chart data
+- `GET /api/badges/definitions` - All badge definitions
+- `GET /api/badges/earned` - User's earned badges
+- `GET /api/badges/progress` - Progress toward all badges
+- `POST /api/badges/check` - Check and award new badges
+- `POST /api/journal` - Create/update journal entry (upsert by date)
+- `GET /api/journal` - List journal entries
+- `GET /api/journal/:date` - Get entry with auto-generated summary
+- `PATCH /api/journal/:date/favorite` - Toggle favorite
+- `GET /api/reminders/settings` - Get reminder settings
+- `PUT /api/reminders/settings` - Update reminder settings
+- `GET /api/stats/user` - Get user stats (totals, streaks)
 
 ## Environment Variables
 
@@ -230,60 +294,32 @@ The `users` table has RLS enabled with these policies:
 
 **Important**: The backend uses the service_role key to bypass RLS for admin operations.
 
-## How to Resume Development
+## Database Migrations to Run
 
-### 1. Start Local Development
+Run these in Supabase SQL Editor if not already done:
+1. `007_admin_features.sql` - Adds is_suspended, is_admin, last_active columns
+2. `008_engagement_features.sql` - Creates mood_checkins, badge_definitions, user_badges, journal_entries, user_stats, notification_history tables + triggers
 
-```bash
-# Terminal 1 - Backend
-cd C:\Users\mharr\stait\myfitbody\backend
-npm run dev
+## Recent Git Commits
 
-# Terminal 2 - Frontend (Mobile)
-cd C:\Users\mharr\stait\myfitbody\frontend
-npm start
-
-# Terminal 3 - Admin Dashboard (optional)
-cd C:\Users\mharr\stait\myfitbody\admin-dashboard
-npm run dev
+```
+9de5fdc - Add meal edit, delete, and quick-add buttons in Recent Activity
+3a5bd2d - Fix timezone issue in daily stats - pass client local date
+fc7f637 - Add missing frontend files (screens, config, assets)
+9308640 - Add engagement features: mood check-ins, badges, journal, reminders
 ```
 
-### 2. Check IP Address (for mobile testing)
-```bash
-ipconfig
-# Look for IPv4 Address under Wi-Fi adapter
-```
+## Known Issues & Lessons Learned
 
-### 3. Update API URL if IP Changed
-Edit `frontend/services/api.js`:
-```javascript
-const API_URL = 'http://YOUR_IP:3000/api';
-```
+1. **Use `--tunnel` flag for Expo**: Regular Expo connection often fails. Use `npx expo start -c --tunnel`
 
-### 4. Connect with Expo Go
-- Open Expo Go on your phone
-- Scan the QR code from terminal
-- App should load
+2. **Backend is on Render**: No local backend needed. Changes deploy automatically on git push.
 
-## Pending Tasks / Known Issues
+3. **Timezone bugs**: Daily stats endpoints must handle timezone correctly. Frontend passes local date string (YYYY-MM-DD) and tzOffset.
 
-### Database Migrations to Run
-If not already done, run these in Supabase SQL Editor:
-- `007_admin_features.sql` - Adds is_suspended, is_admin, last_active columns
+4. **Supabase service_role key doesn't always bypass RLS**: May need explicit policies for service_role.
 
-### iOS App Store Submission
-- Review `docs/ios_app_store_compliance.md` for checklist
-- Account deletion feature is implemented
-- Need to create App Store Connect listing
-- Need privacy policy URL
-- Need app screenshots
-
-### Future Enhancements
-- Integrate Clerk API for actual password reset emails
-- Add push notifications for admin actions
-- Implement offline mode
-- Add data export feature
-- Social features (sharing, challenges)
+5. **Static site routing on Render**: Need `_redirects` file with `/* /index.html 200` for SPA routing.
 
 ---
 
@@ -302,19 +338,33 @@ I'm working on MyFitBody, a fitness tracking app with admin dashboard:
 - APIs: OpenAI (gpt-4o-mini), USDA, OpenFoodFacts
 - Files: C:\Users\mharr\stait\myfitbody\
 
+**How to Run:**
+cd C:\Users\mharr\stait\myfitbody\frontend
+npx expo start -c --tunnel
+(Backend runs on Render automatically - no local backend needed)
+
 **Completed Features:**
-- Full mobile app with: auth, profile setup, meal/workout logging, AI features
-- Admin dashboard with: user management, stats, suspend/delete/make admin
+- Full mobile app: auth, profile setup, meal/workout logging, AI features
+- Engagement features: mood check-ins, badges, journal, reminders
+- Recent Activity: meals grouped by day/type with edit/delete/add buttons
+- Admin dashboard: user management, stats, suspend/delete/make admin
 
 **Key Files:**
-- backend/src/index.js - All API routes including admin endpoints
-- frontend/screens/ - All mobile app screens
+- backend/src/index.js - All API routes (~4000 lines)
+- frontend/screens/HomeScreen.js - Dashboard with meal actions
+- frontend/screens/MealScreen.js - Meal logging with edit mode
+- frontend/services/api.js - All API functions
 - admin-dashboard/src/ - Admin React app
 
 **Recent Work:**
-- Fixed admin dashboard RLS issue (added service_role_select_all policy)
-- Added toggle admin, suspend, delete user features
-- Created system architecture diagram
+- Added meal edit, delete, quick-add buttons in Recent Activity
+- Fixed timezone bug in daily stats
+- Added engagement features (mood, badges, journal, reminders)
+- Meals now grouped by day and meal type
+
+**Migrations needed in Supabase:**
+- 007_admin_features.sql
+- 008_engagement_features.sql
 
 Can you help me continue?
 ```

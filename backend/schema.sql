@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  starting_weight DECIMAL(6,2),
+  weight_unit TEXT DEFAULT 'lb' CHECK (weight_unit IN ('lb', 'kg')),
   food_preferences JSONB DEFAULT '{}',
   dietary_restrictions TEXT[] DEFAULT '{}',
   weight_goal TEXT CHECK (weight_goal IN ('build_muscle', 'lose_fat', 'maintain', 'recomp')),
@@ -79,8 +81,10 @@ CREATE TABLE IF NOT EXISTS meals (
   protein DECIMAL(6,2),
   carbs DECIMAL(6,2),
   fat DECIMAL(6,2),
+  fiber DECIMAL(6,2),
   sugar DECIMAL(6,2),
-  serving_size TEXT,
+  serving_size DECIMAL(8,2),
+  serving_unit TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
