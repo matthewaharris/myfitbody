@@ -1,27 +1,72 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "MyFitBody",
+    "slug": "myfitbody",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "myfitbody",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.stait.myfitbody",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "ai.stait.myfitbody",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "MyFitBody uses the camera to scan food barcodes and take progress photos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MyFitBody accesses your photos so you can attach progress photos and meal pictures.",
+          "cameraPermission": "MyFitBody uses the camera to take progress photos and meal pictures."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
+      ],
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2bcccf44-c407-44b0-9878-83d9f281c82d"
+      }
+    },
+    "owner": "mharris26"
   }
 }
