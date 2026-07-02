@@ -3305,10 +3305,10 @@ app.post('/api/mood-checkins', requireAuth, async (req, res) => {
 
     if (error) throw error;
 
-    // Update user stats for checkin count
-    await supabase.rpc('increment_checkin_count', { p_user_id: req.user.id }).catch(() => {
-      // Ignore if function doesn't exist yet
-    });
+    // Update user stats for checkin count. Supabase query builders are
+    // thenables without .catch(); RPC failures arrive in the resolved value's
+    // `error` field, which we intentionally ignore (function may not exist yet).
+    await supabase.rpc('increment_checkin_count', { p_user_id: req.user.id });
 
     res.status(201).json(data);
   } catch (error) {
