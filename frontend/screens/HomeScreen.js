@@ -279,80 +279,49 @@ export default function HomeScreen({ onNavigate }) {
           </TouchableOpacity>
         </View>
 
-        {/* Quick Access Grid */}
-        <View style={styles.quickAccessGrid}>
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('progress')}
-          >
-            <Text style={styles.quickAccessIcon}>📊</Text>
-            <Text style={styles.quickAccessLabel}>Progress</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('water')}
-          >
-            <Text style={styles.quickAccessIcon}>💧</Text>
-            <Text style={styles.quickAccessLabel}>Water</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('sauna')}
-          >
-            <Text style={styles.quickAccessIcon}>🧖</Text>
-            <Text style={styles.quickAccessLabel}>Sauna</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('stats')}
-          >
-            <Text style={styles.quickAccessIcon}>📈</Text>
-            <Text style={styles.quickAccessLabel}>Stats</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('recipes')}
-          >
-            <Text style={styles.quickAccessIcon}>📖</Text>
-            <Text style={styles.quickAccessLabel}>Recipes</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.quickAccessButton, styles.aiButton]}
-            onPress={() => onNavigate('ai')}
-          >
-            <Text style={styles.quickAccessIcon}>🤖</Text>
-            <Text style={styles.quickAccessLabel}>AI</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('mood')}
-          >
-            <Text style={styles.quickAccessIcon}>😊</Text>
-            <Text style={styles.quickAccessLabel}>Mood</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('badges')}
-          >
-            <Text style={styles.quickAccessIcon}>🏆</Text>
-            <Text style={styles.quickAccessLabel}>Badges</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickAccessButton}
-            onPress={() => onNavigate('journal')}
-          >
-            <Text style={styles.quickAccessIcon}>📝</Text>
-            <Text style={styles.quickAccessLabel}>Journal</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Quick Access - grouped by what you want to do */}
+        {[
+          {
+            title: 'Track',
+            tiles: [
+              { icon: '💧', label: 'Water', screen: 'water' },
+              { icon: '🧖', label: 'Sauna', screen: 'sauna' },
+              { icon: '😊', label: 'Mood', screen: 'mood' },
+              { icon: '📝', label: 'Journal', screen: 'journal' },
+            ],
+          },
+          {
+            title: 'Review',
+            tiles: [
+              { icon: '📊', label: 'Progress', screen: 'progress' },
+              { icon: '📈', label: 'Stats', screen: 'stats' },
+              { icon: '🏆', label: 'Badges', screen: 'badges' },
+            ],
+          },
+          {
+            title: 'Plan',
+            tiles: [
+              { icon: '📖', label: 'Recipes', screen: 'recipes' },
+              { icon: '🤖', label: 'AI', screen: 'ai' },
+            ],
+          },
+        ].map((group) => (
+          <View key={group.title} style={styles.quickAccessSection}>
+            <Text style={styles.quickAccessSectionTitle}>{group.title}</Text>
+            <View style={styles.quickAccessGrid}>
+              {group.tiles.map((tile) => (
+                <TouchableOpacity
+                  key={tile.screen}
+                  style={styles.quickAccessButton}
+                  onPress={() => onNavigate(tile.screen)}
+                >
+                  <Text style={styles.quickAccessIcon}>{tile.icon}</Text>
+                  <Text style={styles.quickAccessLabel}>{tile.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ))}
 
         {/* Smart Suggestions */}
         {(suggestions.length > 0 || calorieBurnSuggestions) && (
@@ -652,11 +621,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#666',
   },
+  quickAccessSection: {
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  quickAccessSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#8E8E93',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    marginLeft: 2,
+  },
   quickAccessGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    marginBottom: 16,
     gap: 10,
   },
   quickAccessButton: {
@@ -803,11 +783,6 @@ const styles = StyleSheet.create({
   signOutText: {
     fontSize: 16,
     color: '#FF3B30',
-  },
-  // AI Button
-  aiButton: {
-    backgroundColor: '#f0f0ff',
-    borderColor: '#007AFF',
   },
   // Suggestions styles
   suggestionsSection: {
