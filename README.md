@@ -16,7 +16,7 @@ AI-powered fitness and nutrition tracking app with cross-platform support (Web, 
 **Backend:**
 - Node.js + Express
 - Supabase (PostgreSQL)
-- OpenAI API
+- Anthropic Claude API
 
 **Frontend** (Coming soon):
 - React Native (Expo)
@@ -59,7 +59,7 @@ Create `.env` file with:
 ```
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
 PORT=3000
 NODE_ENV=development
 ```

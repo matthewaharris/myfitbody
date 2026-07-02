@@ -52,7 +52,7 @@ git push -u origin main
 5. Add Environment Variables (use your actual values from backend/.env):
    - `SUPABASE_URL` = your Supabase project URL
    - `SUPABASE_SERVICE_ROLE_KEY` = your Supabase service_role key
-   - `OPENAI_API_KEY` = your OpenAI API key
+   - `ANTHROPIC_API_KEY` = your Anthropic API key
    - `NODE_ENV` = `production`
    - `PORT` = `3000`
 

@@ -7,6 +7,7 @@ import { requireAuth } from './middleware/auth.js';
 import { requireAdmin, generateAdminToken } from './middleware/admin.js';
 import { sendPushNotification, NotificationTemplates } from './utils/pushNotifications.js';
 import { extractNutrients } from './utils/nutrients.js';
+import { generateJson } from './utils/claude.js';
 
 dotenv.config();
 
@@ -745,7 +746,7 @@ app.delete('/api/workouts/templates/:workoutId', requireAuth, async (req, res) =
   }
 });
 
-// Estimate calories using OpenAI
+// Estimate calories using Claude
 app.post('/api/workouts/estimate-calories', requireAuth, async (req, res) => {
   try {
     const { exercises } = req.body;
@@ -760,7 +761,6 @@ app.post('/api/workouts/estimate-calories', requireAuth, async (req, res) => {
     const userWeight = profile?.starting_weight || 150;
     const weightUnit = profile?.weight_unit || 'lb';
 
-    // Format exercise data for OpenAI
     const exercisesSummary = exercises.map(ex =>
       `${ex.exercise}: ${ex.sets} sets, ${ex.total_reps} total reps` +
       (ex.avg_weight !== 'bodyweight' ? `, ${ex.avg_weight} lbs` : ', bodyweight')
@@ -768,40 +768,28 @@ app.post('/api/workouts/estimate-calories', requireAuth, async (req, res) => {
 
     const prompt = `Estimate the total calories burned for this workout by a person weighing ${userWeight} ${weightUnit}:
 
-${exercisesSummary}
+${exercisesSummary}`;
 
-Respond with a JSON object containing:
-- estimated_calories: a number representing the estimated total calories burned
-- explanation: a brief explanation of the estimate (1-2 sentences)
-
-Only respond with the JSON object, no other text.`;
-
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+    const result = await generateJson({
+      system: 'You are a fitness expert that estimates calories burned during workouts.',
+      prompt,
+      maxTokens: 2000,
+      schema: {
+        type: 'object',
+        properties: {
+          estimated_calories: {
+            type: 'number',
+            description: 'Estimated total calories burned',
+          },
+          explanation: {
+            type: 'string',
+            description: 'Brief explanation of the estimate (1-2 sentences)',
+          },
+        },
+        required: ['estimated_calories', 'explanation'],
+        additionalProperties: false,
       },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are a fitness expert that estimates calories burned during workouts. Always respond with valid JSON.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 200
-      })
     });
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
-
-    const content = data.choices[0].message.content;
-    const result = JSON.parse(content);
 
     res.json(result);
   } catch (error) {
@@ -2432,57 +2420,45 @@ Difficulty level: ${difficulty || 'intermediate'}
 ${goalContext[profile?.weight_goal] || ''}
 
 Recent workout history (avoid repeating the exact same exercises):
-${recentWorkouts?.map(w => w.workout_exercises?.map(we => we.exercises?.name).join(', ')).join('\n') || 'No recent history'}
+${recentWorkouts?.map(w => w.workout_exercises?.map(we => we.exercises?.name).join(', ')).join('\n') || 'No recent history'}`;
 
-Respond with a JSON object containing:
-{
-  "name": "Descriptive workout name",
-  "description": "Brief description of the workout",
-  "estimated_duration": number (minutes),
-  "estimated_calories": number,
-  "exercises": [
-    {
-      "name": "Exercise name",
-      "sets": number,
-      "reps": "rep range or time (e.g., '10-12' or '30 sec')",
-      "rest_seconds": number,
-      "notes": "form tips or modifications",
-      "muscle_groups": ["primary muscle", "secondary muscle"]
-    }
-  ],
-  "warmup": "Brief warmup instructions",
-  "cooldown": "Brief cooldown instructions"
-}
-
-Only respond with the JSON object, no other text.`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+    const workout = await generateJson({
+      system: 'You are an expert personal trainer and fitness coach. Generate safe, effective workouts tailored to the user\'s goals and equipment. Vary your exercise selection between generations rather than defaulting to the same routine.',
+      prompt,
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Descriptive workout name' },
+          description: { type: 'string', description: 'Brief description of the workout' },
+          estimated_duration: { type: 'number', description: 'Duration in minutes' },
+          estimated_calories: { type: 'number' },
+          exercises: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Exercise name' },
+                sets: { type: 'number' },
+                reps: { type: 'string', description: "Rep range or time (e.g., '10-12' or '30 sec')" },
+                rest_seconds: { type: 'number' },
+                notes: { type: 'string', description: 'Form tips or modifications' },
+                muscle_groups: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Primary muscle first, then secondary',
+                },
+              },
+              required: ['name', 'sets', 'reps', 'rest_seconds', 'notes', 'muscle_groups'],
+              additionalProperties: false,
+            },
+          },
+          warmup: { type: 'string', description: 'Brief warmup instructions' },
+          cooldown: { type: 'string', description: 'Brief cooldown instructions' },
+        },
+        required: ['name', 'description', 'estimated_duration', 'estimated_calories', 'exercises', 'warmup', 'cooldown'],
+        additionalProperties: false,
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are an expert personal trainer and fitness coach. Generate safe, effective workouts tailored to the user\'s goals and equipment. Always respond with valid JSON.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 1500
-      })
     });
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
-
-    const content = data.choices[0].message.content;
-    // Clean up the response - remove markdown code blocks if present
-    const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const workout = JSON.parse(cleanContent);
 
     // Store for analytics (optional)
     await supabase.from('ai_generated_workouts').insert({
@@ -2540,65 +2516,55 @@ ${goalMacroGuidance[profile?.weight_goal] || ''}
 IMPORTANT:
 - Try to incorporate their loved foods where it makes sense
 - NEVER include any of their avoided foods
-- Respect all dietary restrictions
+- Respect all dietary restrictions`;
 
-Respond with a JSON object containing:
-{
-  "name": "Recipe name",
-  "description": "Brief appetizing description",
-  "prep_time_minutes": number,
-  "cook_time_minutes": number,
-  "servings": number,
-  "difficulty": "easy" | "medium" | "hard",
-  "ingredients": [
-    {
-      "name": "Ingredient name",
-      "amount": "quantity with unit (e.g., '2 cups', '200g')",
-      "calories": number (for this amount),
-      "protein": number (grams),
-      "carbs": number (grams),
-      "fat": number (grams)
-    }
-  ],
-  "instructions": ["Step 1...", "Step 2..."],
-  "nutrition_per_serving": {
-    "calories": number,
-    "protein": number,
-    "carbs": number,
-    "fat": number,
-    "fiber": number
-  },
-  "tips": "Optional cooking tips or variations"
-}
-
-Only respond with the JSON object, no other text.`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+    const recipe = await generateJson({
+      system: 'You are an expert nutritionist and chef. Generate healthy, delicious recipes that meet the user\'s dietary needs and preferences. Provide accurate macro estimates. Be creative and varied in your recipe choices between generations.',
+      prompt,
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Recipe name' },
+          description: { type: 'string', description: 'Brief appetizing description' },
+          prep_time_minutes: { type: 'number' },
+          cook_time_minutes: { type: 'number' },
+          servings: { type: 'number' },
+          difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Ingredient name' },
+                amount: { type: 'string', description: "Quantity with unit (e.g., '2 cups', '200g')" },
+                calories: { type: 'number', description: 'Calories for this amount' },
+                protein: { type: 'number', description: 'Grams' },
+                carbs: { type: 'number', description: 'Grams' },
+                fat: { type: 'number', description: 'Grams' },
+              },
+              required: ['name', 'amount', 'calories', 'protein', 'carbs', 'fat'],
+              additionalProperties: false,
+            },
+          },
+          instructions: { type: 'array', items: { type: 'string' } },
+          nutrition_per_serving: {
+            type: 'object',
+            properties: {
+              calories: { type: 'number' },
+              protein: { type: 'number' },
+              carbs: { type: 'number' },
+              fat: { type: 'number' },
+              fiber: { type: 'number' },
+            },
+            required: ['calories', 'protein', 'carbs', 'fat', 'fiber'],
+            additionalProperties: false,
+          },
+          tips: { type: 'string', description: 'Cooking tips or variations' },
+        },
+        required: ['name', 'description', 'prep_time_minutes', 'cook_time_minutes', 'servings', 'difficulty', 'ingredients', 'instructions', 'nutrition_per_serving', 'tips'],
+        additionalProperties: false,
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are an expert nutritionist and chef. Generate healthy, delicious recipes that meet the user\'s dietary needs and preferences. Always respond with valid JSON. Provide accurate macro estimates.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 2000
-      })
     });
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
-
-    const content = data.choices[0].message.content;
-    const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const recipe = JSON.parse(cleanContent);
 
     // Store for analytics
     await supabase.from('ai_generated_recipes').insert({

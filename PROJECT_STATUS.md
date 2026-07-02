@@ -9,7 +9,7 @@ A fitness tracking mobile app with admin dashboard built with:
 - **Backend**: Node.js/Express (deployed on Render)
 - **Authentication**: Supabase Auth (mobile), Custom JWT (admin)
 - **Database**: PostgreSQL (Supabase)
-- **External APIs**: USDA FoodData Central, Open Food Facts, OpenAI
+- **External APIs**: USDA FoodData Central, Open Food Facts, Anthropic Claude
 
 ## Deployment URLs
 
@@ -148,7 +148,7 @@ npx expo start -c --tunnel
 - Node.js (>=18.0.0)
 - Express.js 4.18.2
 - @supabase/supabase-js 2.39.0
-- OpenAI API 4.20.1
+- Anthropic SDK (@anthropic-ai/sdk)
 - jsonwebtoken 9.0.2
 
 ### Database Tables
@@ -270,7 +270,7 @@ C:\Users\mharr\stait\myfitbody\
 ```
 SUPABASE_URL=https://xzbojmczlmkcqvetiqfh.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
-OPENAI_API_KEY=<openai_key>
+ANTHROPIC_API_KEY=<anthropic_key>
 USDA_API_KEY=<usda_key>
 PORT=3000
 NODE_ENV=development
@@ -337,7 +337,7 @@ I'm working on MyFitBody, a fitness tracking app with admin dashboard:
 - Admin: React + Vite deployed on Render (https://myfitbody-admin.onrender.com)
 - Backend: Node.js/Express on Render (https://myfitbody-api.onrender.com)
 - Database: Supabase PostgreSQL
-- APIs: OpenAI (gpt-4o-mini), USDA, OpenFoodFacts
+- APIs: Anthropic Claude (claude-opus-4-8), USDA, OpenFoodFacts
 - Files: C:\Users\mharr\stait\myfitbody\
 
 **How to Run:**

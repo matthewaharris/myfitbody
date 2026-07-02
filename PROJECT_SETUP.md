@@ -90,12 +90,12 @@ Set the Supabase values in `frontend/.env.local` (see `frontend/.env.example`):
 
 ## Step 3: Get External API Keys
 
-### 3.1 OpenAI API Key
+### 3.1 Anthropic API Key
 
-1. Go to [platform.openai.com](https://platform.openai.com)
+1. Go to [platform.claude.com](https://platform.claude.com)
 2. Click **API Keys**
-3. Create new secret key
-4. Copy: `sk-proj-...`
+3. Create new API key
+4. Copy: `sk-ant-...`
 
 ### 3.2 USDA FoodData Central API Key
 
@@ -132,7 +132,7 @@ In Render Dashboard, add these environment variables:
 |----------|-------|-------|
 | `SUPABASE_URL` | `https://xxxx.supabase.co` | From Step 1.4 |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbG...` | From Step 1.4 |
-| `OPENAI_API_KEY` | `sk-proj-...` | From Step 3.1 |
+| `ANTHROPIC_API_KEY` | `sk-ant-...` | From Step 3.1 |
 | `USDA_API_KEY` | `your-key` | From Step 3.2 |
 | `PORT` | `3000` | Default |
 | `NODE_ENV` | `production` | For production |
@@ -233,7 +233,7 @@ SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
 
 # External APIs
-OPENAI_API_KEY=sk-proj-...
+ANTHROPIC_API_KEY=sk-ant-...
 USDA_API_KEY=your-usda-key
 
 # Server
@@ -373,7 +373,7 @@ myfitbody/
 
 - **Supabase Dashboard**: https://supabase.com/dashboard
 - **Render Dashboard**: https://dashboard.render.com
-- **OpenAI Platform**: https://platform.openai.com
+- **Claude Platform**: https://platform.claude.com
 - **Expo**: https://expo.dev
 
 ---
