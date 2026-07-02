@@ -26,6 +26,7 @@ import {
   setAuthToken,
   setUserInfo,
 } from '../services/api';
+import { colors } from '../theme';
 
 // Debounce hook
 function useDebounce(value, delay) {
@@ -97,7 +98,7 @@ function FoodSearchModal({ visible, onClose, onSelect }) {
         </View>
 
         {searching ? (
-          <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
         ) : (
           <FlatList
             data={results}
@@ -575,7 +576,7 @@ export default function RecipeScreen({ onNavigate }) {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={recipes}
@@ -674,7 +675,7 @@ export default function RecipeScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -687,7 +688,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -695,7 +696,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   listContent: {
@@ -722,7 +723,7 @@ const styles = StyleSheet.create({
   recipeName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   favoriteIcon: {
     fontSize: 16,
@@ -730,18 +731,18 @@ const styles = StyleSheet.create({
   },
   recipeDescription: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   recipeStats: {
     fontSize: 13,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 6,
     fontWeight: '500',
   },
   recipeServings: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     marginTop: 2,
   },
   logArrow: {
@@ -763,14 +764,14 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.primary,
   },
   deleteButton: {
     borderRightWidth: 0,
   },
   deleteButtonText: {
     fontSize: 14,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   emptyState: {
     alignItems: 'center',
@@ -784,17 +785,17 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
   },
   emptyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -821,7 +822,7 @@ const modalStyles = StyleSheet.create({
   },
   cancelButton: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   title: {
     fontSize: 18,
@@ -829,7 +830,7 @@ const modalStyles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   content: {
@@ -843,11 +844,11 @@ const modalStyles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -862,10 +863,10 @@ const modalStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -876,7 +877,7 @@ const modalStyles = StyleSheet.create({
   },
   emptyIngredients: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 20,
@@ -884,7 +885,7 @@ const modalStyles = StyleSheet.create({
   ingredientItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -895,11 +896,11 @@ const modalStyles = StyleSheet.create({
   ingredientName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   ingredientNutrients: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   ingredientControls: {
@@ -916,7 +917,7 @@ const modalStyles = StyleSheet.create({
   },
   multiplierUnit: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginLeft: 4,
     marginRight: 12,
   },
@@ -925,18 +926,18 @@ const modalStyles = StyleSheet.create({
   },
   removeButtonText: {
     fontSize: 18,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   totalsSection: {
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     margin: 16,
     borderRadius: 12,
   },
   totalsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -950,16 +951,16 @@ const modalStyles = StyleSheet.create({
   totalValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   totalLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   perServing: {
     fontSize: 13,
-    color: '#007AFF',
+    color: colors.primary,
     textAlign: 'center',
     marginTop: 12,
   },
@@ -967,7 +968,7 @@ const modalStyles = StyleSheet.create({
     padding: 16,
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -983,32 +984,32 @@ const modalStyles = StyleSheet.create({
   foodName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   foodBrand: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   foodNutrients: {
     fontSize: 13,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 4,
   },
   servingInfo: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     marginTop: 2,
   },
   emptyText: {
     textAlign: 'center',
     padding: 40,
-    color: '#666',
+    color: colors.textSecondary,
   },
   hintText: {
     textAlign: 'center',
     padding: 40,
-    color: '#999',
+    color: colors.textMuted,
   },
 });
 
@@ -1029,14 +1030,14 @@ const logModalStyles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     marginBottom: 20,
     textAlign: 'center',
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   mealTypes: {
@@ -1050,10 +1051,10 @@ const logModalStyles = StyleSheet.create({
     paddingVertical: 12,
     marginHorizontal: 4,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   mealTypeButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   mealTypeIcon: {
     fontSize: 20,
@@ -1061,7 +1062,7 @@ const logModalStyles = StyleSheet.create({
   },
   mealTypeLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   mealTypeLabelActive: {
     color: '#fff',
@@ -1073,7 +1074,7 @@ const logModalStyles = StyleSheet.create({
     marginBottom: 24,
   },
   servingsInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     width: 60,
@@ -1083,7 +1084,7 @@ const logModalStyles = StyleSheet.create({
   },
   servingsTotal: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginLeft: 12,
   },
   buttons: {
@@ -1100,13 +1101,13 @@ const logModalStyles = StyleSheet.create({
   cancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   logButton: {
     flex: 1,
     padding: 14,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   logText: {

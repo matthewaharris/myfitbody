@@ -16,6 +16,7 @@ import {
   updateReminderSettings,
   setAuthToken,
 } from '../services/api';
+import { colors } from '../theme';
 
 const TIME_OPTIONS = [
   '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
@@ -339,7 +340,7 @@ export default function ReminderSettingsScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   saveText: {
     color: '#4CAF50',
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     marginTop: 16,
     marginBottom: 12,
@@ -414,11 +415,11 @@ const styles = StyleSheet.create({
   reminderTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   reminderDescription: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     marginTop: 2,
   },
   timeSelectorRow: {
@@ -432,24 +433,24 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
   },
   timeButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     marginRight: 8,
   },
   timeArrow: {
     fontSize: 10,
-    color: '#999',
+    color: colors.textMuted,
   },
   timePickerContainer: {
     marginTop: 12,
@@ -471,7 +472,7 @@ const styles = StyleSheet.create({
   },
   timeOptionText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
   },
   timeOptionTextSelected: {
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
   },
   daysLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   daysRow: {
@@ -497,14 +498,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   dayButtonSelected: {
     backgroundColor: '#4CAF50',
   },
   dayText: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   dayTextSelected: {
@@ -518,7 +519,7 @@ const styles = StyleSheet.create({
   },
   intervalLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   intervalRow: {
@@ -528,7 +529,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     marginRight: 12,
   },
   intervalButtonSelected: {
@@ -536,7 +537,7 @@ const styles = StyleSheet.create({
   },
   intervalText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   intervalTextSelected: {
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
   },
   inactivityLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   inactivityRow: {
@@ -560,7 +561,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     marginRight: 12,
   },
   inactivityButtonSelected: {
@@ -568,7 +569,7 @@ const styles = StyleSheet.create({
   },
   inactivityText: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   inactivityTextSelected: {

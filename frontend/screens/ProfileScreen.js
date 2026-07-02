@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAuth, useUser } from '../hooks/useAuth';
 import { getMyProfile, updateMyProfile, updateUser, getMe, setAuthToken, setUserInfo, deleteMyAccount } from '../services/api';
+import { colors } from '../theme';
 
 export default function ProfileScreen({ onNavigate }) {
   const { getToken } = useAuth();
@@ -531,7 +532,7 @@ export default function ProfileScreen({ onNavigate }) {
             <Switch
               value={enableMoodCheckins}
               onValueChange={setEnableMoodCheckins}
-              trackColor={{ false: '#ddd', true: '#007AFF' }}
+              trackColor={{ false: '#ddd', true: colors.primary }}
             />
           </View>
 
@@ -543,7 +544,7 @@ export default function ProfileScreen({ onNavigate }) {
             <Switch
               value={enableCaloriePrompts}
               onValueChange={setEnableCaloriePrompts}
-              trackColor={{ false: '#ddd', true: '#007AFF' }}
+              trackColor={{ false: '#ddd', true: colors.primary }}
             />
           </View>
 
@@ -622,7 +623,7 @@ export default function ProfileScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -640,7 +641,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   saveButtonDisabled: {
@@ -668,7 +669,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
-    color: '#333',
+    color: colors.text,
   },
   inputRow: {
     flexDirection: 'row',
@@ -680,13 +681,13 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
     flex: 1,
   },
   nameInput: {
     flex: 2,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
     textAlign: 'right',
     padding: 8,
     borderWidth: 1,
@@ -709,7 +710,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   optionCardSelected: {
-    borderColor: '#007AFF',
+    borderColor: colors.primary,
     backgroundColor: '#f0f7ff',
   },
   optionIcon: {
@@ -718,10 +719,10 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   optionLabelSelected: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   weightInputRow: {
@@ -747,14 +748,14 @@ const styles = StyleSheet.create({
   unitButton: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   unitButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   unitText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   unitTextActive: {
     color: '#fff',
@@ -771,15 +772,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#ddd',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   chipSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   chipTextSelected: {
     color: '#fff',
@@ -795,7 +796,7 @@ const styles = StyleSheet.create({
   },
   macroLabel: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   macroInputContainer: {
     flexDirection: 'row',
@@ -804,7 +805,7 @@ const styles = StyleSheet.create({
   macroInput: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     textAlign: 'right',
     minWidth: 60,
     padding: 8,
@@ -814,7 +815,7 @@ const styles = StyleSheet.create({
   },
   macroUnit: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginLeft: 8,
     width: 30,
   },
@@ -833,12 +834,12 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
     marginBottom: 2,
   },
   toggleDescription: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   bottomPadding: {
     height: 40,
@@ -846,7 +847,7 @@ const styles = StyleSheet.create({
   // Food preferences styles
   sectionSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 16,
     marginTop: -8,
   },
@@ -862,15 +863,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   foodTypeButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   foodTypeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   foodTypeTextActive: {
     color: '#fff',
@@ -892,7 +893,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -910,7 +911,7 @@ const styles = StyleSheet.create({
   foodListTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   foodChipContainer: {
@@ -940,31 +941,31 @@ const styles = StyleSheet.create({
   },
   foodChipText: {
     fontSize: 13,
-    color: '#333',
+    color: colors.text,
     marginRight: 5,
   },
   foodChipRemove: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#999',
+    color: colors.textMuted,
   },
   // Account deletion styles
   dangerButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#FF3B30',
+    borderColor: colors.danger,
     borderRadius: 8,
     padding: 14,
     alignItems: 'center',
   },
   dangerButtonText: {
-    color: '#FF3B30',
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600',
   },
   dangerHint: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -973,7 +974,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     marginTop: 12,
   },
@@ -987,15 +988,15 @@ const styles = StyleSheet.create({
   reminderSettingsLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   reminderSettingsDescription: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   reminderSettingsArrow: {
     fontSize: 18,
-    color: '#999',
+    color: colors.textMuted,
   },
 });

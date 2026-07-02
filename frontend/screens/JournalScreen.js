@@ -19,6 +19,7 @@ import {
   toggleJournalFavorite,
   setAuthToken,
 } from '../services/api';
+import { colors } from '../theme';
 
 const MOOD_EMOJIS = ['😢', '😕', '😐', '🙂', '😄'];
 
@@ -383,7 +384,7 @@ export default function JournalScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   addButton: {
     padding: 8,
@@ -450,12 +451,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   emptyText: {
     textAlign: 'center',
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 14,
     padding: 20,
   },
@@ -495,12 +496,12 @@ const styles = StyleSheet.create({
   entryTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   entryPreview: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   entrySummary: {
@@ -510,7 +511,7 @@ const styles = StyleSheet.create({
   },
   summaryChip: {
     fontSize: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -541,13 +542,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   cancelButton: {
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 16,
   },
   editorTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   saveButton: {
     color: '#4CAF50',
@@ -562,7 +563,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   autoSummaryCard: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -570,7 +571,7 @@ const styles = StyleSheet.create({
   autoSummaryTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   summaryContent: {},
@@ -585,11 +586,11 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   noActivityText: {
     fontSize: 14,
-    color: '#999',
+    color: colors.textMuted,
     fontStyle: 'italic',
   },
   moodSection: {
@@ -598,7 +599,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   moodRow: {
@@ -608,7 +609,7 @@ const styles = StyleSheet.create({
   moodButton: {
     padding: 12,
     borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   moodButtonSelected: {
     backgroundColor: '#E8F5E9',
@@ -619,14 +620,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   titleInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
     marginBottom: 16,
   },
   contentInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
@@ -634,7 +635,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tagsInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,

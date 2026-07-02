@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAuth, useUser } from '../hooks/useAuth';
 import { createUser, createUserProfile, searchFoods, setAuthToken, setUserInfo } from '../services/api';
+import { colors } from '../theme';
 
 const STEPS = ['Personal', 'Goals', 'Diet', 'Foods', 'Macros', 'Notifications'];
 
@@ -536,7 +537,7 @@ export default function ProfileSetupWizard({ onComplete, onSkip }) {
         <Switch
           value={enableMoodCheckins}
           onValueChange={setEnableMoodCheckins}
-          trackColor={{ false: '#ddd', true: '#007AFF' }}
+          trackColor={{ false: '#ddd', true: colors.primary }}
         />
       </View>
 
@@ -548,7 +549,7 @@ export default function ProfileSetupWizard({ onComplete, onSkip }) {
         <Switch
           value={enableCaloriePrompts}
           onValueChange={setEnableCaloriePrompts}
-          trackColor={{ false: '#ddd', true: '#007AFF' }}
+          trackColor={{ false: '#ddd', true: colors.primary }}
         />
       </View>
     </View>
@@ -632,22 +633,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressDotActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   progressNumber: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#999',
+    color: colors.textMuted,
   },
   progressNumberActive: {
     color: '#fff',
   },
   progressLabel: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
   },
   progressLabelActive: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   stepContent: {
@@ -674,11 +675,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
+    color: colors.text,
   },
   stepSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 24,
   },
   optionCard: {
@@ -692,7 +693,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   optionCardSelected: {
-    borderColor: '#007AFF',
+    borderColor: colors.primary,
     backgroundColor: '#f0f7ff',
   },
   optionIcon: {
@@ -701,10 +702,10 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   optionLabelSelected: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   weightSection: {
@@ -714,7 +715,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
-    color: '#333',
+    color: colors.text,
   },
   weightInputRow: {
     flexDirection: 'row',
@@ -739,14 +740,14 @@ const styles = StyleSheet.create({
   unitButton: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   unitButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   unitText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   unitTextActive: {
     color: '#fff',
@@ -763,22 +764,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#ddd',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   chipSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   chipTextSelected: {
     color: '#fff',
     fontWeight: '600',
   },
   macroCard: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -791,32 +792,32 @@ const styles = StyleSheet.create({
   },
   macroCardSmall: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
   macroLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   macroInput: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
     minWidth: 100,
   },
   macroInputSmall: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
   },
   macroUnit: {
     fontSize: 14,
-    color: '#999',
+    color: colors.textMuted,
     marginTop: 4,
   },
   toggleRow: {
@@ -834,12 +835,12 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   toggleDescription: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   buttonContainer: {
     padding: 20,
@@ -856,13 +857,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   skipButton: {
     flex: 1,
@@ -872,13 +873,13 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: 16,
-    color: '#999',
+    color: colors.textMuted,
   },
   nextButton: {
     flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   nextButtonDisabled: {
@@ -902,15 +903,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   foodTypeButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   foodTypeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   foodTypeTextActive: {
     color: '#fff',
@@ -932,7 +933,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -950,7 +951,7 @@ const styles = StyleSheet.create({
   foodListTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   foodChipContainer: {
@@ -980,13 +981,13 @@ const styles = StyleSheet.create({
   },
   foodChipText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     marginRight: 6,
   },
   foodChipRemove: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#999',
+    color: colors.textMuted,
   },
   foodHint: {
     fontSize: 13,

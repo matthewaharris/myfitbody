@@ -24,6 +24,7 @@ import {
   addNotificationReceivedListener,
   addNotificationResponseListener,
 } from './services/notifications';
+import { colors } from './theme';
 
 // Remembers that this user chose "skip" in the setup wizard, so we don't
 // re-show onboarding every launch until they fill in a weight goal
@@ -70,11 +71,11 @@ function SignInScreen({ onNavigate }) {
         style={styles.input}
       />
 
-      <Button title="Sign In" onPress={onSignInPress} />
+      <Button title="Sign In" color={colors.primary} onPress={onSignInPress} />
 
       <View style={styles.footer}>
         <Text>Don't have an account? </Text>
-        <Button title="Sign Up" onPress={() => onNavigate('signup')} />
+        <Button title="Sign Up" color={colors.primary} onPress={() => onNavigate('signup')} />
       </View>
     </View>
   );
@@ -124,11 +125,11 @@ function SignUpScreen({ onNavigate }) {
         style={styles.input}
       />
 
-      <Button title="Sign Up" onPress={onSignUpPress} />
+      <Button title="Sign Up" color={colors.primary} onPress={onSignUpPress} />
 
       <View style={styles.footer}>
         <Text>Already have an account? </Text>
-        <Button title="Sign In" onPress={() => onNavigate('signin')} />
+        <Button title="Sign In" color={colors.primary} onPress={() => onNavigate('signin')} />
       </View>
     </View>
   );
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
-    color: '#666',
+    color: colors.textSecondary,
   },
   input: {
     borderWidth: 1,

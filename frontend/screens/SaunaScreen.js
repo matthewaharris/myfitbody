@@ -17,6 +17,7 @@ import {
   logSaunaSession,
   deleteSaunaSession,
 } from '../services/api';
+import { colors } from '../theme';
 
 const todayString = () => {
   const d = new Date();
@@ -264,7 +265,7 @@ export default function SaunaScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -274,11 +275,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.border,
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   title: {
     fontSize: 18,
@@ -301,16 +302,16 @@ const styles = StyleSheet.create({
   },
   summaryDivider: {
     width: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.border,
   },
   summaryValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF6B35',
+    color: colors.primary,
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   card: {
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   input: {
@@ -349,7 +350,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   logButton: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     padding: 14,
     alignItems: 'center',
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyText: {
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     paddingVertical: 20,
   },
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   },
   sessionNotes: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   sessionRight: {
@@ -400,16 +401,16 @@ const styles = StyleSheet.create({
   sessionDuration: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FF6B35',
+    color: colors.primary,
   },
   sessionTemp: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   hintText: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
   },

@@ -16,12 +16,13 @@ import {
   setAuthToken,
   setUserInfo,
 } from '../services/api';
+import { colors } from '../theme';
 
 const { width: screenWidth } = Dimensions.get('window');
 const chartWidth = screenWidth - 64;
 
 // Simple Bar Chart Component
-function BarChart({ data, maxValue, barColor = '#007AFF', label }) {
+function BarChart({ data, maxValue, barColor = colors.primary, label }) {
   const barWidth = Math.max((chartWidth - (data.length * 4)) / data.length, 8);
 
   return (
@@ -331,7 +332,7 @@ export default function StatsScreen({ onNavigate }) {
               <BarChart
                 data={getDailyCaloriesData()}
                 maxValue={Math.max(...getDailyCaloriesData().map(d => d.value), 2000)}
-                barColor="#007AFF"
+                barColor={colors.primary}
                 label="Daily Calories (Last 2 Weeks)"
               />
             </View>
@@ -411,7 +412,7 @@ export default function StatsScreen({ onNavigate }) {
                           <Text
                             style={[
                               styles.weightStatValue,
-                              { color: change < 0 ? '#4CAF50' : change > 0 ? '#FF5722' : '#666' },
+                              { color: change < 0 ? '#4CAF50' : change > 0 ? '#FF5722' : colors.textSecondary },
                             ]}
                           >
                             {change > 0 ? '+' : ''}{change.toFixed(1)} lb
@@ -450,7 +451,7 @@ export default function StatsScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -491,11 +492,11 @@ const styles = StyleSheet.create({
   streakValue: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   streakLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   streakBadge: {
@@ -523,12 +524,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   tabActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: colors.textSecondary,
   },
   tabTextActive: {
     color: '#fff',
@@ -549,11 +550,11 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   summaryLabel: {
     fontSize: 11,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
   },
@@ -574,7 +575,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 16,
   },
   weekRow: {
@@ -588,11 +589,11 @@ const styles = StyleSheet.create({
   weekDate: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   weekDays: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   weekStats: {
@@ -601,11 +602,11 @@ const styles = StyleSheet.create({
   weekCalories: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#007AFF',
+    color: colors.primary,
   },
   weekTotal: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   weightStatsContainer: {
     flexDirection: 'row',
@@ -617,11 +618,11 @@ const styles = StyleSheet.create({
   weightStatValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   weightStatLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   emptyState: {
@@ -636,17 +637,17 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
   },
   emptyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -665,7 +666,7 @@ const chartStyles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 16,
   },
   chartArea: {
@@ -687,7 +688,7 @@ const chartStyles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 10,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 6,
   },
   lineChartArea: {
@@ -701,7 +702,7 @@ const chartStyles = StyleSheet.create({
   },
   yAxisLabel: {
     fontSize: 10,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'right',
   },
   lineChartContent: {
@@ -732,17 +733,17 @@ const chartStyles = StyleSheet.create({
   },
   xAxisLabel: {
     fontSize: 10,
-    color: '#666',
+    color: colors.textSecondary,
   },
   emptyChart: {
     height: 150,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
   },
   emptyText: {
-    color: '#666',
+    color: colors.textSecondary,
     fontSize: 14,
   },
 });

@@ -23,6 +23,7 @@ import {
   setAuthToken,
   setUserInfo,
 } from '../services/api';
+import { colors } from '../theme';
 
 export default function ProgressScreen({ onNavigate }) {
   const { getToken } = useAuth();
@@ -284,7 +285,7 @@ export default function ProgressScreen({ onNavigate }) {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : measurements.length === 0 ? (
         <View style={styles.emptyState}>
@@ -402,7 +403,7 @@ export default function ProgressScreen({ onNavigate }) {
 
             {uploading && (
               <View style={styles.uploadingIndicator}>
-                <ActivityIndicator color="#007AFF" />
+                <ActivityIndicator color={colors.primary} />
                 <Text style={styles.uploadingText}>Uploading photo...</Text>
               </View>
             )}
@@ -440,7 +441,7 @@ export default function ProgressScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -453,7 +454,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -461,7 +462,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   loadingContainer: {
@@ -492,7 +493,7 @@ const styles = StyleSheet.create({
   measurementDate: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   photoIndicator: {
     fontSize: 16,
@@ -517,7 +518,7 @@ const styles = StyleSheet.create({
   },
   measurementLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   measurementValueRow: {
     flexDirection: 'row',
@@ -526,7 +527,7 @@ const styles = StyleSheet.create({
   measurementValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   changeIndicator: {
     fontSize: 12,
@@ -546,7 +547,7 @@ const styles = StyleSheet.create({
   },
   measurementNotes: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     fontStyle: 'italic',
     marginTop: 8,
   },
@@ -563,17 +564,17 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
   startButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -598,7 +599,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   modalTitle: {
     fontSize: 18,
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   modalContent: {
@@ -622,7 +623,7 @@ const styles = StyleSheet.create({
   },
   photoButton: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
   },
   photoButtonText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   photoPreviewContainer: {
@@ -652,7 +653,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: 60,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.danger,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -670,11 +671,11 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -694,7 +695,7 @@ const styles = StyleSheet.create({
   },
   uploadingText: {
     marginLeft: 8,
-    color: '#007AFF',
+    color: colors.primary,
     fontSize: 14,
   },
   // Photo viewer modal

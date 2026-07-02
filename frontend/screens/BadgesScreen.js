@@ -17,6 +17,7 @@ import {
   checkForNewBadges,
   setAuthToken,
 } from '../services/api';
+import { colors } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -82,7 +83,7 @@ export default function BadgesScreen({ onNavigate }) {
   const categories = ['all', ...Object.keys(CATEGORY_INFO)];
 
   const renderBadge = (badge) => {
-    const categoryColor = CATEGORY_INFO[badge.category]?.color || '#666';
+    const categoryColor = CATEGORY_INFO[badge.category]?.color || colors.textSecondary;
 
     return (
       <View
@@ -243,7 +244,7 @@ export default function BadgesScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   content: {
     flex: 1,
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   statDivider: {
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
   streaksTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   streaksRow: {
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   },
   streakLabel: {
     fontSize: 11,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   newBadgesAlert: {
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   },
   newBadgeName: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     fontWeight: '500',
   },
   categoryScroll: {
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
   },
   categoryLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   categoryLabelSelected: {
     color: '#fff',
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   badgeIconLocked: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   badgeEmoji: {
     fontSize: 32,
@@ -446,15 +447,15 @@ const styles = StyleSheet.create({
   badgeName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   badgeNameLocked: {
-    color: '#999',
+    color: colors.textMuted,
   },
   badgeDescription: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   progressSection: {
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     minWidth: 40,
     textAlign: 'right',
   },

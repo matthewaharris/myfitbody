@@ -31,6 +31,7 @@ import {
   saveWorkoutAsTemplate,
   toggleWorkoutFavorite,
 } from '../services/api';
+import { colors } from '../theme';
 
 // Exercise Picker Modal Component
 function ExercisePickerModal({ visible, onClose, onSelect, onCreateNew, exercises, exerciseHistory }) {
@@ -386,7 +387,7 @@ function RestTimerModal({ visible, onClose }) {
                   style={[
                     timerStyles.progressFill,
                     {
-                      backgroundColor: timeRemaining === 0 ? '#4CAF50' : '#007AFF',
+                      backgroundColor: timeRemaining === 0 ? '#4CAF50' : colors.primary,
                       opacity: timeRemaining === 0 ? 1 : 0.2 + (getProgressPercent() / 100) * 0.8
                     }
                   ]}
@@ -863,7 +864,7 @@ export default function WorkoutScreen({ onNavigate, workoutId = null, cloneFromI
               disabled={estimatingCalories}
             >
               {estimatingCalories ? (
-                <ActivityIndicator color="#007AFF" />
+                <ActivityIndicator color={colors.primary} />
               ) : (
                 <>
                   <Text style={styles.estimateCaloriesIcon}>🔥</Text>
@@ -962,7 +963,7 @@ export default function WorkoutScreen({ onNavigate, workoutId = null, cloneFromI
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -982,11 +983,11 @@ const styles = StyleSheet.create({
   },
   dismissKeyboardText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.primary,
   },
   cancelButton: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   headerTitle: {
     fontSize: 18,
@@ -994,7 +995,7 @@ const styles = StyleSheet.create({
   },
   finishButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   scrollView: {
@@ -1026,11 +1027,11 @@ const styles = StyleSheet.create({
   exerciseName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   removeButton: {
     fontSize: 18,
-    color: '#999',
+    color: colors.textMuted,
     padding: 4,
   },
   setsHeader: {
@@ -1044,20 +1045,20 @@ const styles = StyleSheet.create({
   setLabel: {
     width: 40,
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   weightLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
     textAlign: 'center',
   },
   repsLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -1070,11 +1071,11 @@ const styles = StyleSheet.create({
     width: 40,
     fontSize: 16,
     fontWeight: '600',
-    color: '#007AFF',
+    color: colors.primary,
   },
   weightInput: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 10,
     marginHorizontal: 8,
@@ -1085,12 +1086,12 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginHorizontal: 8,
   },
   repsInput: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 10,
     marginHorizontal: 8,
@@ -1113,11 +1114,11 @@ const styles = StyleSheet.create({
   },
   addSetText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '500',
   },
   addExerciseButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1145,7 +1146,7 @@ const styles = StyleSheet.create({
   },
   estimateCaloriesText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '500',
   },
   actionButtonsRow: {
@@ -1175,7 +1176,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   actionButtonTextActive: {
@@ -1192,19 +1193,19 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   floatingTimerButton: {
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     borderRadius: 30,
     width: 60,
     height: 60,
@@ -1248,16 +1249,16 @@ const timerStyles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   closeButton: {
     fontSize: 24,
-    color: '#666',
+    color: colors.textSecondary,
     padding: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -1269,7 +1270,7 @@ const timerStyles = StyleSheet.create({
   },
   presetButton: {
     width: '30%',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     paddingVertical: 20,
     alignItems: 'center',
@@ -1277,7 +1278,7 @@ const timerStyles = StyleSheet.create({
   presetButtonText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   timerDisplay: {
     alignItems: 'center',
@@ -1304,7 +1305,7 @@ const timerStyles = StyleSheet.create({
   timerText: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   timerComplete: {
     color: '#4CAF50',
@@ -1319,15 +1320,15 @@ const timerStyles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: colors.primary,
   },
   resumeButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   controlButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#007AFF',
+    color: colors.primary,
   },
   resetButton: {
     paddingHorizontal: 32,
@@ -1338,7 +1339,7 @@ const timerStyles = StyleSheet.create({
   resetButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
 });
 
@@ -1357,7 +1358,7 @@ const modalStyles = StyleSheet.create({
   },
   cancelButton: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   title: {
     fontSize: 18,
@@ -1365,14 +1366,14 @@ const modalStyles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   searchContainer: {
     padding: 16,
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
@@ -1388,22 +1389,22 @@ const modalStyles = StyleSheet.create({
   exerciseName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   exerciseMeta: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   lastPerformance: {
     fontSize: 12,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 4,
     fontStyle: 'italic',
   },
   systemBadge: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     backgroundColor: '#f0f0f0',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -1412,18 +1413,18 @@ const modalStyles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     padding: 40,
-    color: '#666',
+    color: colors.textSecondary,
   },
   createButton: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     alignItems: 'center',
   },
   createButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   formContainer: {
@@ -1432,12 +1433,12 @@ const modalStyles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -1453,15 +1454,15 @@ const modalStyles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#ddd',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   chipSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   chipTextSelected: {
     color: '#fff',

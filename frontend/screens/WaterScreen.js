@@ -20,6 +20,7 @@ import {
   setAuthToken,
   setUserInfo,
 } from '../services/api';
+import { colors } from '../theme';
 
 export default function WaterScreen({ onNavigate }) {
   const { getToken } = useAuth();
@@ -128,12 +129,12 @@ export default function WaterScreen({ onNavigate }) {
   };
 
   const getProgressColor = () => {
-    if (!waterData) return '#007AFF';
+    if (!waterData) return colors.primary;
     const percent = waterData.progress_percent;
     if (percent >= 100) return '#4CAF50';
     if (percent >= 75) return '#8BC34A';
     if (percent >= 50) return '#FFC107';
-    return '#007AFF';
+    return colors.primary;
   };
 
   const getProgressWidth = () => {
@@ -321,7 +322,7 @@ export default function WaterScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   progressCard: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     margin: 16,
     borderRadius: 16,
     padding: 24,
@@ -429,7 +430,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 16,
   },
   quickAddGrid: {
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     marginHorizontal: 4,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
   },
   quickAddIcon: {
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
   quickAddLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   logEntry: {
     flexDirection: 'row',
@@ -472,11 +473,11 @@ const styles = StyleSheet.create({
   logEntryAmount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   logEntryTime: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   deleteButton: {
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 18,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   emptyLog: {
     alignItems: 'center',
@@ -497,12 +498,12 @@ const styles = StyleSheet.create({
   emptyLogText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   emptyLogSubtext: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -520,13 +521,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -541,14 +542,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: '#007AFF',
+    borderBottomColor: colors.primary,
     paddingHorizontal: 16,
     paddingBottom: 8,
     minWidth: 100,
   },
   goalInputUnit: {
     fontSize: 24,
-    color: '#666',
+    color: colors.textSecondary,
     marginLeft: 8,
   },
   presetGoals: {
@@ -565,12 +566,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   presetGoalButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   presetGoalText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: colors.textSecondary,
   },
   presetGoalTextActive: {
     color: '#fff',
@@ -589,13 +590,13 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   modalSaveButton: {
     flex: 1,
     padding: 14,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   modalSaveText: {

@@ -18,6 +18,7 @@ import {
   getMoodTrends,
   setAuthToken,
 } from '../services/api';
+import { colors } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -280,7 +281,7 @@ export default function MoodCheckinScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   content: {
     flex: 1,
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
   trendsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   trendsRow: {
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
   },
   trendLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   formCard: {
     backgroundColor: '#fff',
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginRight: 12,
     borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     minWidth: 80,
   },
   typeButtonSelected: {
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
   },
   typeLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   typeLabelSelected: {
     color: '#4CAF50',
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   ratingLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   emojiRow: {
@@ -402,7 +403,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     width: (width - 80) / 5,
   },
   emojiButtonSelected: {
@@ -415,17 +416,17 @@ const styles = StyleSheet.create({
   },
   emojiNumber: {
     fontSize: 10,
-    color: '#999',
+    color: colors.textMuted,
     marginTop: 2,
   },
   notesLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   notesInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 12,
     fontSize: 16,
@@ -475,12 +476,12 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   emptyText: {
     textAlign: 'center',
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 14,
     padding: 20,
   },
@@ -513,12 +514,12 @@ const styles = StyleSheet.create({
   },
   checkinTime: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     marginBottom: 8,
   },
   checkinNotes: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontStyle: 'italic',
   },
 });

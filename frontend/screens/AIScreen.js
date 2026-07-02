@@ -11,6 +11,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { generateAIWorkout, generateAIRecipe, createWorkout, addExerciseToWorkout, createRecipe } from '../services/api';
+import { colors } from '../theme';
 
 export default function AIScreen({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('workout'); // 'workout' or 'recipe'
@@ -435,7 +436,7 @@ export default function AIScreen({ onNavigate }) {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#007AFF" />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>
               {activeTab === 'workout' ? 'Creating your personalized workout...' : 'Cooking up a recipe for you...'}
             </Text>
@@ -460,7 +461,7 @@ export default function AIScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -493,14 +494,14 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: '#007AFF',
+    borderBottomColor: colors.primary,
   },
   tabText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   tabTextActive: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   scrollView: {
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
   },
   introText: {
     fontSize: 15,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 20,
     lineHeight: 22,
   },
@@ -521,7 +522,7 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
     marginTop: 12,
   },
@@ -545,11 +546,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   optionChipSelected: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   optionChipText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   optionChipTextSelected: {
     color: '#fff',
@@ -563,7 +564,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   generateButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -581,7 +582,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   resultContainer: {
     backgroundColor: '#fff',
@@ -591,12 +592,12 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   resultDescription: {
     fontSize: 15,
-    color: '#666',
+    color: colors.textSecondary,
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -614,11 +615,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: colors.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   macroRow: {
@@ -628,7 +629,7 @@ const styles = StyleSheet.create({
   },
   macroText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   section: {
     marginBottom: 20,
@@ -636,12 +637,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   sectionText: {
     fontSize: 15,
-    color: '#666',
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   exerciseCard: {
@@ -653,16 +654,16 @@ const styles = StyleSheet.create({
   exerciseName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   exerciseDetails: {
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 4,
   },
   exerciseNotes: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
     fontStyle: 'italic',
     marginTop: 4,
   },
@@ -675,13 +676,13 @@ const styles = StyleSheet.create({
   ingredientAmount: {
     width: 100,
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '500',
   },
   ingredientName: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   stepRow: {
     flexDirection: 'row',
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
@@ -702,7 +703,7 @@ const styles = StyleSheet.create({
   stepText: {
     flex: 1,
     fontSize: 15,
-    color: '#333',
+    color: colors.text,
     lineHeight: 22,
   },
   actionButtons: {
@@ -712,7 +713,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   newButtonText: {
-    color: '#333',
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },

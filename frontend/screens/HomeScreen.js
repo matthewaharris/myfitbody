@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAuth, useUser } from '../hooks/useAuth';
 import { getDailyStats, getWorkouts, getMeals, getMe, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions, deleteMeal } from '../services/api';
+import { colors } from '../theme';
 
 export default function HomeScreen({ onNavigate }) {
   const { signOut, getToken } = useAuth();
@@ -501,7 +502,7 @@ export default function HomeScreen({ onNavigate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -516,12 +517,12 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   userName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   profileButton: {
     width: 44,
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   summaryCard: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     margin: 16,
     borderRadius: 16,
     padding: 20,
@@ -596,7 +597,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: colors.primary,
   },
   secondaryAction: {
     flex: 1,
@@ -614,12 +615,12 @@ const styles = StyleSheet.create({
   primaryActionText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#007AFF',
+    color: colors.primary,
   },
   secondaryActionText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   quickAccessSection: {
     paddingHorizontal: 16,
@@ -646,7 +647,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: colors.border,
   },
   quickAccessIcon: {
     fontSize: 24,
@@ -655,7 +656,7 @@ const styles = StyleSheet.create({
   quickAccessLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   section: {
     backgroundColor: '#fff',
@@ -668,7 +669,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
-    color: '#333',
+    color: colors.text,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -695,10 +696,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: colors.textSecondary,
   },
   activeTabText: {
-    color: '#007AFF',
+    color: colors.primary,
   },
   activityItemContainer: {
     borderBottomWidth: 1,
@@ -720,7 +721,7 @@ const styles = StyleSheet.create({
   },
   cloneButtonText: {
     fontSize: 12,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '500',
   },
   activityIcon: {
@@ -738,16 +739,16 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   activityMeta: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   activityStats: {
     fontSize: 13,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -767,12 +768,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   signOutButton: {
@@ -782,7 +783,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   // Suggestions styles
   suggestionsSection: {
@@ -806,16 +807,16 @@ const styles = StyleSheet.create({
   suggestionTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 2,
   },
   suggestionDescription: {
     fontSize: 13,
-    color: '#666',
+    color: colors.textSecondary,
   },
   suggestionArrow: {
     fontSize: 18,
-    color: '#007AFF',
+    color: colors.primary,
     marginLeft: 8,
   },
   calorieBurnCard: {
@@ -844,7 +845,7 @@ const styles = StyleSheet.create({
   },
   calorieBurnText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   // Grouped meals styles
   dayGroup: {
@@ -857,7 +858,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.border,
   },
   mealTypeGroup: {
     backgroundColor: '#fff',
@@ -885,7 +886,7 @@ const styles = StyleSheet.create({
   mealTypeTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     flex: 1,
   },
   mealTypeCalories: {

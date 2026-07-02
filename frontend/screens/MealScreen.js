@@ -29,6 +29,7 @@ import {
   lookupBarcode,
 } from '../services/api';
 import api from '../services/api';
+import { colors } from '../theme';
 
 // Unit conversion constants
 const CONVERSIONS = {
@@ -202,7 +203,7 @@ function FoodSearchModal({ visible, onClose, onSelect, favoriteMeals, onRelogFav
 
               {searching ? (
                 <View style={modalStyles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#007AFF" />
+                  <ActivityIndicator size="large" color={colors.primary} />
                   <Text style={modalStyles.loadingText}>Searching...</Text>
                 </View>
               ) : (
@@ -958,7 +959,7 @@ export default function MealScreen({ onNavigate, editMealId, mealType: initialMe
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -968,7 +969,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   header: {
     flexDirection: 'row',
@@ -981,7 +982,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   headerTitle: {
     fontSize: 18,
@@ -989,7 +990,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   scrollView: {
@@ -1005,7 +1006,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   mealTypeContainer: {
@@ -1018,10 +1019,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginHorizontal: 4,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   mealTypeButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   mealTypeIcon: {
     fontSize: 24,
@@ -1029,7 +1030,7 @@ const styles = StyleSheet.create({
   },
   mealTypeLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   mealTypeLabelActive: {
     color: '#fff',
@@ -1039,12 +1040,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
   },
   foodSelectorPlaceholder: {
     flex: 1,
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 16,
   },
   selectedFoodInfo: {
@@ -1053,11 +1054,11 @@ const styles = StyleSheet.create({
   selectedFoodName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   selectedFoodBrand: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   searchIcon: {
@@ -1066,7 +1067,7 @@ const styles = StyleSheet.create({
   },
   servingToggle: {
     flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 4,
     marginBottom: 16,
@@ -1087,10 +1088,10 @@ const styles = StyleSheet.create({
   },
   servingToggleText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   servingToggleTextActive: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   servingRow: {
@@ -1103,12 +1104,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     padding: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
   },
   servingUnit: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginLeft: 12,
   },
   customServingRow: {
@@ -1121,13 +1122,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     padding: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     marginRight: 12,
   },
   unitSelector: {
     flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -1136,11 +1137,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   unitButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   unitButtonText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   unitButtonTextActive: {
@@ -1156,14 +1157,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   quickServingButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   quickServingText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   quickServingTextActive: {
     color: '#fff',
@@ -1172,7 +1173,7 @@ const styles = StyleSheet.create({
   conversionText: {
     marginTop: 12,
     fontSize: 13,
-    color: '#999',
+    color: colors.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
   },
@@ -1186,11 +1187,11 @@ const styles = StyleSheet.create({
   nutritionValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   nutritionLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   additionalNutrients: {
@@ -1201,10 +1202,10 @@ const styles = StyleSheet.create({
   },
   additionalNutrientText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   notesInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -1216,7 +1217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 14,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ddd',
@@ -1231,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   favoriteButtonText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   favoriteButtonTextActive: {
@@ -1239,7 +1240,7 @@ const styles = StyleSheet.create({
   },
   favoriteHint: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -1260,7 +1261,7 @@ const modalStyles = StyleSheet.create({
   },
   cancelButton: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.danger,
   },
   title: {
     fontSize: 18,
@@ -1270,7 +1271,7 @@ const modalStyles = StyleSheet.create({
     padding: 16,
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
@@ -1282,7 +1283,7 @@ const modalStyles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   foodItem: {
     flexDirection: 'row',
@@ -1296,26 +1297,26 @@ const modalStyles = StyleSheet.create({
   foodName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
   },
   foodBrand: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   foodNutrients: {
     fontSize: 13,
-    color: '#007AFF',
+    color: colors.primary,
     marginTop: 4,
   },
   servingInfo: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
     marginTop: 2,
   },
   sourceTag: {
     fontSize: 10,
-    color: '#999',
+    color: colors.textMuted,
     backgroundColor: '#f0f0f0',
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1325,12 +1326,12 @@ const modalStyles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     padding: 40,
-    color: '#666',
+    color: colors.textSecondary,
   },
   hintText: {
     textAlign: 'center',
     padding: 40,
-    color: '#999',
+    color: colors.textMuted,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -1344,14 +1345,14 @@ const modalStyles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#007AFF',
+    borderBottomColor: colors.primary,
   },
   tabText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   tabTextActive: {
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
   },
   favoriteHeader: {
@@ -1364,7 +1365,7 @@ const modalStyles = StyleSheet.create({
   },
   relogButton: {
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '600',
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1383,12 +1384,12 @@ const modalStyles = StyleSheet.create({
   emptyFavoritesText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   emptyFavoritesHint: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   // Barcode Scanner Styles
@@ -1408,17 +1409,17 @@ const modalStyles = StyleSheet.create({
   permissionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 12,
   },
   permissionText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
   permissionButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 8,
@@ -1482,7 +1483,7 @@ const modalStyles = StyleSheet.create({
     marginBottom: 20,
   },
   scannedProductCard: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 20,
     width: '100%',
@@ -1491,23 +1492,23 @@ const modalStyles = StyleSheet.create({
   scannedProductName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   scannedProductBrand: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   scannedProductNutrients: {
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.primary,
     fontWeight: '500',
     marginBottom: 4,
   },
   scannedProductServing: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textMuted,
   },
   scannedButtons: {
     flexDirection: 'row',
@@ -1524,13 +1525,13 @@ const modalStyles = StyleSheet.create({
   scanAgainButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   selectProductButton: {
     flex: 1,
     padding: 14,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   selectProductButtonText: {
