@@ -16,12 +16,17 @@ import MoodCheckinScreen from './screens/MoodCheckinScreen';
 import BadgesScreen from './screens/BadgesScreen';
 import JournalScreen from './screens/JournalScreen';
 import ReminderSettingsScreen from './screens/ReminderSettingsScreen';
-import { getUserByClerkId, updatePushToken, setAuthToken, setUserInfo } from './services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMe, getMyProfile, updatePushToken } from './services/api';
 import {
   registerForPushNotifications,
   addNotificationReceivedListener,
   addNotificationResponseListener,
 } from './services/notifications';
+
+// Remembers that this user chose "skip" in the setup wizard, so we don't
+// re-show onboarding every launch until they fill in a weight goal
+const SETUP_SKIPPED_KEY = '@myfitbody/profile-setup-skipped';
 
 // Sign In Screen
 function SignInScreen({ onNavigate }) {
@@ -132,7 +137,7 @@ function SignUpScreen({ onNavigate }) {
 
 // Main App with custom navigation
 function MainApp() {
-  const { isSignedIn, isLoaded, user, getToken } = useAuth();
+  const { isSignedIn, isLoaded, user } = useAuth();
   const [currentScreen, setCurrentScreen] = useState('signin');
   const [appScreen, setAppScreen] = useState('home'); // 'home', 'profile', 'workout', 'setup'
   const [navParams, setNavParams] = useState({}); // Store navigation params
@@ -149,19 +154,23 @@ function MainApp() {
       if (isSignedIn && user) {
         try {
           console.log('Checking profile for user:', user.id);
-          const token = await getToken();
-          setAuthToken(token);
 
-          // Set user info headers for backend auth
-          const email = user.emailAddresses?.[0]?.emailAddress;
-          setUserInfo(user.id, email);
-
-          const backendUser = await getUserByClerkId(user.id);
+          // First authenticated request: the backend creates the user row
+          // (and a default profile) if they don't exist yet
+          const backendUser = await getMe();
           console.log('Backend user found:', backendUser);
-          setHasProfile(!!backendUser);
           if (backendUser) {
             setBackendUserId(backendUser.id);
           }
+
+          // A user row always exists after getMe(), so gate onboarding on
+          // whether setup was actually completed (the wizard sets
+          // weight_goal) or explicitly skipped before
+          const [profile, skipped] = await Promise.all([
+            getMyProfile().catch(() => null),
+            AsyncStorage.getItem(SETUP_SKIPPED_KEY).catch(() => null),
+          ]);
+          setHasProfile(!!profile?.weight_goal || skipped === 'true');
         } catch (error) {
           console.log('Error checking profile:', error.message);
           console.log('API Error details:', error.response?.data || error);
@@ -249,6 +258,7 @@ function MainApp() {
             setAppScreen('home');
           }}
           onSkip={() => {
+            AsyncStorage.setItem(SETUP_SKIPPED_KEY, 'true').catch(() => {});
             setHasProfile(true);
             setAppScreen('home');
           }}

@@ -116,31 +116,6 @@ app.patch('/api/users/:userId/push-token', requireAuth, async (req, res) => {
   }
 });
 
-// Get user by Clerk ID
-app.get('/api/users/clerk/:clerkUserId', requireAuth, async (req, res) => {
-  try {
-    const { clerkUserId } = req.params;
-
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('clerk_user_id', clerkUserId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw error;
-    }
-
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
-  }
-});
-
 // --- NOTIFICATION ROUTES ---
 
 // Send a test notification to the current user
@@ -3228,20 +3203,11 @@ app.delete('/api/admin/users/:userId', requireAdmin, async (req, res) => {
   }
 });
 
-// Reset user password (sends email via Clerk - placeholder)
+// Reset user password (placeholder - no in-app flow yet)
+// TODO: send a real reset email via supabase.auth.resetPasswordForEmail(email)
+// once the app has a reset-password screen/deep link to receive it.
 app.post('/api/admin/users/:userId/reset-password', requireAdmin, async (req, res) => {
   try {
-    const { userId } = req.params;
-
-    // Get user's clerk_user_id
-    const { data: user } = await supabase
-      .from('users')
-      .select('clerk_user_id, email')
-      .eq('id', userId)
-      .single();
-
-    // Note: Clerk password reset would need to be done via Clerk's API
-    // For now, just return success - in production you'd integrate with Clerk
     res.json({
       success: true,
       message: 'Password reset request sent',

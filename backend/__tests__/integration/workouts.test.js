@@ -14,7 +14,7 @@ import request from 'supertest';
 
 const mockUser = {
   id: 'user-uuid-123',
-  clerk_user_id: 'clerk_test_user',
+  auth_user_id: 'auth-uuid-123',
   email: 'test@example.com',
 };
 

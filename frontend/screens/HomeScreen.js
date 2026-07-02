@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth, useUser } from '../hooks/useAuth';
-import { getDailyStats, getWorkouts, getMeals, getUserByClerkId, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions, deleteMeal } from '../services/api';
+import { getDailyStats, getWorkouts, getMeals, getMe, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions, deleteMeal } from '../services/api';
 
 export default function HomeScreen({ onNavigate }) {
   const { signOut, getToken } = useAuth();
@@ -35,7 +35,7 @@ export default function HomeScreen({ onNavigate }) {
   const getFirstName = () => {
     // First check our backend user data
     if (userFirstName) return userFirstName;
-    // Then check Clerk user data
+    // Then check auth user data
     if (user?.firstName) return user.firstName;
     // Fallback to email username
     const email = user?.emailAddresses?.[0]?.emailAddress;
@@ -54,7 +54,7 @@ export default function HomeScreen({ onNavigate }) {
         getDailyStats().catch(() => null),
         getWorkouts(5).catch(() => []),
         getMeals().catch(() => []),
-        getUserByClerkId(user?.id).catch(() => null),
+        getMe().catch(() => null),
         getSmartSuggestions().catch(() => ({ suggestions: [] })),
       ]);
 

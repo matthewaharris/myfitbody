@@ -51,7 +51,7 @@ git push -u origin main
 
 5. Add Environment Variables (use your actual values from backend/.env):
    - `SUPABASE_URL` = your Supabase project URL
-   - `SUPABASE_ANON_KEY` = your Supabase anon key
+   - `SUPABASE_SERVICE_ROLE_KEY` = your Supabase service_role key
    - `OPENAI_API_KEY` = your OpenAI API key
    - `NODE_ENV` = `production`
    - `PORT` = `3000`
@@ -92,16 +92,14 @@ Then test with curl or Postman:
 # Health check
 curl http://localhost:3000/health
 
-# Get exercises (requires auth headers)
+# Get exercises (requires a Supabase Auth access token)
 curl http://localhost:3000/api/exercises \
-  -H "x-clerk-user-id: test_user_123" \
-  -H "x-user-email: test@example.com"
+  -H "Authorization: Bearer <supabase-access-token>"
 
 # Log a meal
 curl -X POST http://localhost:3000/api/meals \
   -H "Content-Type: application/json" \
-  -H "x-clerk-user-id: test_user_123" \
-  -H "x-user-email: test@example.com" \
+  -H "Authorization: Bearer <supabase-access-token>" \
   -d '{
     "meal_type": "breakfast",
     "food_name": "Oatmeal with banana",
@@ -113,8 +111,7 @@ curl -X POST http://localhost:3000/api/meals \
 
 # Get daily stats
 curl "http://localhost:3000/api/stats/daily?date=2024-11-21" \
-  -H "x-clerk-user-id: test_user_123" \
-  -H "x-user-email: test@example.com"
+  -H "Authorization: Bearer <supabase-access-token>"
 ```
 
 ## 🎯 Current Status
@@ -127,6 +124,7 @@ curl "http://localhost:3000/api/stats/daily?date=2024-11-21" \
 - [x] Meal logging with macros
 - [x] Daily calorie tracking
 - [x] User profile management
+- [x] Supabase Auth integration (email + password)
 - [x] Documentation (PRD, specs, implementation plan)
 - [x] Git repository with initial commit
 
@@ -134,7 +132,6 @@ curl "http://localhost:3000/api/stats/daily?date=2024-11-21" \
 - [ ] Push to GitHub (manual step required)
 - [ ] Deploy to Render
 - [ ] Frontend React Native app
-- [ ] Clerk authentication integration
 - [ ] AI features (recipe/workout generation)
 - [ ] iOS widget
 - [ ] Journal & mood tracking
@@ -156,11 +153,10 @@ curl "http://localhost:3000/api/stats/daily?date=2024-11-21" \
 
 ## 🔐 Authentication
 
-Currently using simple header-based auth for MVP:
-- `x-clerk-user-id`: The user's Clerk ID
-- `x-user-email`: User's email
+All API routes (except `/health`) require a Supabase Auth access token:
+- `Authorization: Bearer <supabase access token>`
 
-In production, this should be replaced with proper Clerk JWT validation.
+The backend verifies the token server-side via `supabase.auth.getUser()`, and middleware resolves (or auto-creates) the app user row via `users.auth_user_id`.
 
 ## 📦 Project Structure
 

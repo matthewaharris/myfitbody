@@ -43,9 +43,8 @@ export const createUser = async (authUserId, email, firstName = null, lastName =
   return response.data;
 };
 
-// Returns the authenticated user's row (name kept from the Clerk era so
-// screens don't need to change; the argument is ignored).
-export const getUserByClerkId = async () => {
+// Returns the authenticated user's row (created server-side on first request)
+export const getMe = async () => {
   const response = await api.get('/users/me');
   return response.data;
 };

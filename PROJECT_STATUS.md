@@ -7,7 +7,7 @@ A fitness tracking mobile app with admin dashboard built with:
 - **Mobile App**: React Native/Expo 54
 - **Admin Dashboard**: React + Vite (deployed on Render)
 - **Backend**: Node.js/Express (deployed on Render)
-- **Authentication**: Clerk (mobile), Custom JWT (admin)
+- **Authentication**: Supabase Auth (mobile), Custom JWT (admin)
 - **Database**: PostgreSQL (Supabase)
 - **External APIs**: USDA FoodData Central, Open Food Facts, OpenAI
 
@@ -17,7 +17,7 @@ A fitness tracking mobile app with admin dashboard built with:
 |---------|-----|
 | Backend API | https://myfitbody-api.onrender.com |
 | Admin Dashboard | https://myfitbody-admin.onrender.com |
-| Supabase | https://jbmcwxkvoipbismtdzrj.supabase.co |
+| Supabase | https://xzbojmczlmkcqvetiqfh.supabase.co |
 
 ## How to Run the App
 
@@ -37,11 +37,10 @@ npx expo start -c --tunnel
 ### Mobile App Features
 
 #### Authentication
-- Sign up with email/password
-- Email verification flow
+- Sign up with email/password (Supabase Auth, email confirmation disabled)
 - Sign in/out functionality
 - Session persistence with expo-secure-store
-- Clerk user data integration
+- Backend requests authenticated with `Authorization: Bearer <supabase access token>`
 
 #### Profile Setup Wizard (6-step flow)
 1. **Personal Info**: First name, last name, phone number
@@ -133,7 +132,7 @@ npx expo start -c --tunnel
 ### Mobile App (Frontend)
 - React Native 0.81.5
 - Expo SDK 54.0.25
-- @clerk/clerk-expo 2.19.4
+- @supabase/supabase-js (Supabase Auth)
 - Axios 1.13.2
 - expo-secure-store 15.0.7
 - expo-camera (for barcode scanning)
@@ -153,7 +152,7 @@ npx expo start -c --tunnel
 - jsonwebtoken 9.0.2
 
 ### Database Tables
-- `users` - Core user data with Clerk ID, suspension status, admin flag
+- `users` - Core user data with `auth_user_id` (UUID linking to Supabase Auth), suspension status, admin flag
 - `user_profiles` - Goals, restrictions, macro targets, food preferences, reminder_settings JSONB
 - `exercises` - System and custom exercises
 - `workouts` - Workout sessions
@@ -180,7 +179,7 @@ C:\Users\mharr\stait\myfitbody\
 │   ├── src/
 │   │   ├── index.js              # Express server (~4000 lines, all API routes)
 │   │   ├── middleware/
-│   │   │   └── auth.js           # Clerk authentication middleware
+│   │   │   └── auth.js           # Supabase Auth middleware (verifies Bearer token)
 │   │   └── utils/
 │   │       ├── supabase.js       # Supabase client configuration
 │   │       └── pushNotifications.js  # Expo push notification helper
@@ -192,7 +191,7 @@ C:\Users\mharr\stait\myfitbody\
 │   └── .env                      # Environment variables
 │
 ├── frontend/
-│   ├── App.js                    # Main app with Clerk Provider and navigation
+│   ├── App.js                    # Main app with Supabase auth session and navigation
 │   ├── screens/
 │   │   ├── ProfileSetupWizard.js # 6-step profile setup flow
 │   │   ├── HomeScreen.js         # Dashboard with meal grouping, delete/edit/add
@@ -238,6 +237,10 @@ C:\Users\mharr\stait\myfitbody\
 
 ## Key API Endpoints
 
+### Auth & Users
+- `GET /api/users/me` - Returns the authenticated user's row (auto-created on first request)
+- `POST /api/users` - Update first/last name and phone
+
 ### Meal CRUD (recently added)
 - `GET /api/meals` - List meals with optional date filter
 - `GET /api/meals/:mealId` - Get single meal by ID
@@ -265,7 +268,7 @@ C:\Users\mharr\stait\myfitbody\
 
 ### Backend (.env)
 ```
-SUPABASE_URL=https://jbmcwxkvoipbismtdzrj.supabase.co
+SUPABASE_URL=https://xzbojmczlmkcqvetiqfh.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 OPENAI_API_KEY=<openai_key>
 USDA_API_KEY=<usda_key>
@@ -279,6 +282,13 @@ ADMIN_PASSWORD_HASH=<sha256_hash>
 ### Render Environment Variables (Backend)
 Same as above, set in Render dashboard under Environment.
 
+### Frontend (frontend/.env.local)
+```
+EXPO_PUBLIC_SUPABASE_URL=https://xzbojmczlmkcqvetiqfh.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
+```
+See `frontend/.env.example`. Also set in the EAS project environment (development/preview/production).
+
 ### Admin Dashboard (.env.production)
 ```
 VITE_API_URL=https://myfitbody-api.onrender.com
@@ -286,19 +296,11 @@ VITE_API_URL=https://myfitbody-api.onrender.com
 
 ## Database RLS Policies
 
-The `users` table has RLS enabled with these policies:
-- `users_insert_own` - Users can insert their own record
-- `users_select_own` - Users can only select their own record
-- `users_update_own` - Users can only update their own record
-- `service_role_select_all` - Service role can select all (for admin)
-
-**Important**: The backend uses the service_role key to bypass RLS for admin operations.
+RLS is enabled on all 19 tables with no policies. All data access goes through the backend, which uses the service_role key (bypasses RLS). The anon key is used by the mobile app for Supabase Auth only and cannot read table data.
 
 ## Database Migrations to Run
 
-Run these in Supabase SQL Editor if not already done:
-1. `007_admin_features.sql` - Adds is_suspended, is_admin, last_active columns
-2. `008_engagement_features.sql` - Creates mood_checkins, badge_definitions, user_badges, journal_entries, user_stats, notification_history tables + triggers
+The current Supabase project was set up from `database/001_complete_schema.sql` (full schema — includes admin and engagement features, RLS enabled on all 19 tables with no policies). The Supabase Auth migration scripts (`database/002_supabase_auth.sql`, `database/003_drop_clerk.sql`) have already been applied and are only needed when upgrading a pre-migration database.
 
 ## Recent Git Commits
 
@@ -317,7 +319,7 @@ fc7f637 - Add missing frontend files (screens, config, assets)
 
 3. **Timezone bugs**: Daily stats endpoints must handle timezone correctly. Frontend passes local date string (YYYY-MM-DD) and tzOffset.
 
-4. **Supabase service_role key doesn't always bypass RLS**: May need explicit policies for service_role.
+4. **RLS with no policies**: All tables have RLS enabled with no policies, so only the backend (service_role key) can read/write data. The anon key is for Supabase Auth only.
 
 5. **Static site routing on Render**: Need `_redirects` file with `/* /index.html 200` for SPA routing.
 
@@ -331,7 +333,7 @@ Copy and paste this to quickly get Claude up to speed:
 I'm working on MyFitBody, a fitness tracking app with admin dashboard:
 
 **Stack:**
-- Mobile: React Native/Expo 54 with Clerk auth
+- Mobile: React Native/Expo 54 with Supabase Auth (email + password)
 - Admin: React + Vite deployed on Render (https://myfitbody-admin.onrender.com)
 - Backend: Node.js/Express on Render (https://myfitbody-api.onrender.com)
 - Database: Supabase PostgreSQL
@@ -362,9 +364,8 @@ npx expo start -c --tunnel
 - Added engagement features (mood, badges, journal, reminders)
 - Meals now grouped by day and meal type
 
-**Migrations needed in Supabase:**
-- 007_admin_features.sql
-- 008_engagement_features.sql
+**Database schema:**
+- database/001_complete_schema.sql (full schema, already applied; RLS enabled on all tables, backend uses service_role key)
 
 Can you help me continue?
 ```

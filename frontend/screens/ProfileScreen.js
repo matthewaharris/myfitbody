@@ -11,7 +11,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useAuth, useUser } from '../hooks/useAuth';
-import { getMyProfile, updateMyProfile, updateUser, getUserByClerkId, setAuthToken, setUserInfo, deleteMyAccount } from '../services/api';
+import { getMyProfile, updateMyProfile, updateUser, getMe, setAuthToken, setUserInfo, deleteMyAccount } from '../services/api';
 
 export default function ProfileScreen({ onNavigate }) {
   const { getToken } = useAuth();
@@ -72,7 +72,7 @@ export default function ProfileScreen({ onNavigate }) {
       setUserInfo(user?.id, email);
 
       // Load user data (for name and phone)
-      const userData = await getUserByClerkId(user?.id);
+      const userData = await getMe();
       if (userData) {
         setBackendUserId(userData.id);
         setFirstName(userData.first_name || '');

@@ -60,15 +60,15 @@
 ├─────────────────────────────────┤             ├─────────────────────────────────┤
 │                                 │             │                                 │
 │  ┌───────────────────────────┐  │             │  ┌───────────────────────────┐  │
-│  │        Clerk              │  │             │  │       Supabase            │  │
+│  │      Supabase Auth        │  │             │  │       Supabase            │  │
 │  │   (Authentication)        │  │             │  │    (PostgreSQL + API)     │  │
 │  │                           │  │             │  │                           │  │
 │  │   - User signup/login     │  │             │  │   Tables:                 │  │
-│  │   - JWT tokens            │  │             │  │   ├── users               │  │
+│  │   - JWT access tokens     │  │             │  │   ├── users               │  │
 │  │   - Password management   │  │             │  │   ├── user_profiles       │  │
-│  │   - OAuth providers       │  │             │  │   ├── meals               │  │
+│  │   - Email confirm off     │  │             │  │   ├── meals               │  │
 │  │                           │  │             │  │   ├── workouts            │  │
-│  │   clerk.com               │  │             │  │   ├── exercises           │  │
+│  │   supabase.co             │  │             │  │   ├── exercises           │  │
 │  └───────────────────────────┘  │             │  │   ├── body_measurements   │  │
 │                                 │             │  │   ├── water_intake        │  │
 │  ┌───────────────────────────┐  │             │  │   ├── recipes             │  │
@@ -76,7 +76,7 @@
 │  │   (AI Features)           │  │             │  │   └── admin_audit_log     │  │
 │  │                           │  │             │  │                           │  │
 │  │   - Workout generation    │  │             │  │   URL:                    │  │
-│  │   - Recipe generation     │  │             │  │   jbmcwxkvoipbismtdzrj.   │  │
+│  │   - Recipe generation     │  │             │  │   xzbojmczlmkcqvetiqfh.   │  │
 │  │   - Smart suggestions     │  │             │  │   supabase.co             │  │
 │  │   - Calorie burn tips     │  │             │  │                           │  │
 │  │                           │  │             │  │   Auth: Service Role Key  │  │
@@ -118,7 +118,7 @@
 │   Admin Dashboard      │ Render Static   │ https://myfitbody-admin.onrender.com     │
 │   Backend API          │ Render Web Svc  │ https://myfitbody-api.onrender.com       │
 │   Database             │ Supabase        │ PostgreSQL (hosted)                      │
-│   Authentication       │ Clerk           │ clerk.com (hosted)                       │
+│   Authentication       │ Supabase Auth   │ supabase.co (hosted)                     │
 │   AI Services          │ OpenAI          │ api.openai.com                           │
 │   Food Data            │ USDA/OpenFood   │ External APIs                            │
 │                                                                                      │
@@ -131,9 +131,9 @@
 │                                                                                      │
 │   1. USER AUTHENTICATION FLOW                                                        │
 │   ┌────────────┐      ┌────────────┐      ┌────────────┐      ┌────────────┐        │
-│   │  Mobile    │ ───► │   Clerk    │ ───► │  Backend   │ ───► │  Supabase  │        │
-│   │   App      │      │  (verify)  │      │  (create   │      │  (store    │        │
-│   │            │ ◄─── │            │ ◄─── │   user)    │ ◄─── │   user)    │        │
+│   │  Mobile    │ ───► │  Supabase  │ ───► │  Backend   │ ───► │  Supabase  │        │
+│   │   App      │      │    Auth    │      │  (create   │      │  (store    │        │
+│   │            │ ◄─── │  (verify)  │ ◄─── │   user)    │ ◄─── │   user)    │        │
 │   └────────────┘ JWT  └────────────┘      └────────────┘      └────────────┘        │
 │                                                                                      │
 │   2. MEAL LOGGING FLOW                                                               │
@@ -179,8 +179,9 @@
 │   Admin Dashboard (.env.production):                                                 │
 │   └── VITE_API_URL              - Backend API URL for production                    │
 │                                                                                      │
-│   Mobile App:                                                                        │
-│   └── Clerk Publishable Key     - Configured in Clerk dashboard                     │
+│   Mobile App (frontend/.env.local, also set in EAS project env):                    │
+│   ├── EXPO_PUBLIC_SUPABASE_URL      - Supabase project URL                          │
+│   └── EXPO_PUBLIC_SUPABASE_ANON_KEY - Supabase anon key (auth only)                 │
 │                                                                                      │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -190,7 +191,7 @@
 ### Mobile App (React Native / Expo)
 - **Framework**: React Native with Expo
 - **State Management**: React hooks + AsyncStorage
-- **Authentication**: Clerk React Native SDK
+- **Authentication**: Supabase Auth (email + password) via @supabase/supabase-js
 - **Navigation**: React Navigation
 - **Key Features**: Meal tracking, workout logging, AI recommendations, progress photos
 
@@ -206,16 +207,16 @@
 - **Framework**: Express.js
 - **Database Client**: @supabase/supabase-js
 - **AI Client**: OpenAI SDK
-- **Auth**: Custom JWT for admin, Clerk verification for users
+- **Auth**: Custom JWT for admin, Supabase Auth access tokens verified via supabase.auth.getUser() for users
 
 ### Database (Supabase/PostgreSQL)
 - **Platform**: Supabase (managed PostgreSQL)
-- **Auth**: Row Level Security (RLS) with service role bypass
+- **Auth**: Row Level Security (RLS) enabled on all 19 tables with no policies; backend uses service role
 - **Real-time**: Available but not currently used
 - **Storage**: Supabase Storage for progress photos
 
 ### External APIs
-- **Clerk**: User authentication, JWT tokens, OAuth
+- **Supabase Auth**: User authentication, email + password, JWT access tokens
 - **OpenAI**: GPT-4o-mini for workout/recipe generation
 - **USDA**: Nutrition data lookup
 - **OpenFoodFacts**: Food name validation

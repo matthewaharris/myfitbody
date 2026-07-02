@@ -8,7 +8,7 @@ This document contains everything needed to set up the MyFitBody project from sc
 - **Frontend**: React Native / Expo mobile app
 - **Backend**: Node.js / Express API server
 - **Database**: PostgreSQL via Supabase
-- **Auth**: Clerk for user authentication
+- **Auth**: Supabase Auth for user authentication (email + password)
 - **Hosting**: Render.com for backend + admin dashboard
 - **Admin Dashboard**: React + Vite web app
 
@@ -23,7 +23,7 @@ This document contains everything needed to set up the MyFitBody project from sc
          │                      │
          ▼                      ▼
 ┌─────────────────┐     ┌─────────────────┐
-│     Clerk       │     │  Admin Dashboard│
+│  Supabase Auth  │     │  Admin Dashboard│
 │  (Auth Provider)│     │  (Render Static)│
 └─────────────────┘     └─────────────────┘
 ```
@@ -58,36 +58,33 @@ This document contains everything needed to set up the MyFitBody project from sc
 
 ### 1.4 Get API Keys
 
-1. Go to **Settings > API**
+1. Go to **Settings > API Keys**
 2. Copy these values (you'll need them later):
    - **Project URL**: `https://xxxx.supabase.co`
-   - **anon/public key**: `eyJhbG...`
+   - **anon/public key**: `eyJhbG...` (used by the mobile app for auth only)
    - **service_role key**: `eyJhbG...` (keep this secret!)
 
 ---
 
-## Step 2: Set Up Clerk Authentication
+## Step 2: Set Up Supabase Auth
 
-### 2.1 Create Clerk Application
+### 2.1 Configure Auth Provider
 
-1. Go to [clerk.com](https://clerk.com) and sign in
-2. Click "Add Application"
-3. Name: `MyFitBody`
-4. Enable authentication methods:
-   - Email/Password
-   - (Optional) Google, Apple, etc.
+1. In the Supabase Dashboard, go to **Authentication > Sign In / Providers**
+2. Enable the **Email** provider (email + password)
+3. Disable **"Confirm email"** (the app does not use email confirmation)
 
-### 2.2 Get Clerk Keys
+### 2.2 Auth Keys
 
-1. Go to **API Keys** in Clerk Dashboard
-2. Copy:
-   - **Publishable Key**: `pk_test_...` or `pk_live_...`
-   - **Secret Key**: `sk_test_...` or `sk_live_...`
+Supabase Auth uses the same keys from Step 1.4:
+- The **anon key** is used by the mobile app to sign up / sign in
+- The **service_role key** is used by the backend to verify access tokens
 
-### 2.3 Configure Clerk for Expo
+### 2.3 Configure Supabase Auth for Expo
 
-The frontend already has Clerk configured. You just need to update the publishable key in:
-- `frontend/App.js` or wherever `ClerkProvider` is used
+Set the Supabase values in `frontend/.env.local` (see `frontend/.env.example`):
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 
 ---
 
@@ -134,7 +131,6 @@ In Render Dashboard, add these environment variables:
 | Variable | Value | Notes |
 |----------|-------|-------|
 | `SUPABASE_URL` | `https://xxxx.supabase.co` | From Step 1.4 |
-| `SUPABASE_ANON_KEY` | `eyJhbG...` | From Step 1.4 |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbG...` | From Step 1.4 |
 | `OPENAI_API_KEY` | `sk-proj-...` | From Step 3.1 |
 | `USDA_API_KEY` | `your-key` | From Step 3.2 |
@@ -197,12 +193,15 @@ In `frontend/src/services/api.js` (or config file):
 const API_URL = 'https://myfitbody-api.onrender.com';
 ```
 
-### 6.2 Update Clerk Key
+### 6.2 Update Supabase Env Vars
 
-In `frontend/App.js`:
-```javascript
-<ClerkProvider publishableKey="pk_live_YOUR_KEY">
+In `frontend/.env.local` (see `frontend/.env.example`):
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
 ```
+
+These are also set in the EAS project environment (development/preview/production) for EAS builds.
 
 ### 6.3 Run Locally
 
@@ -231,7 +230,6 @@ eas build --platform android
 ```env
 # Supabase
 SUPABASE_URL=https://xxxx.supabase.co
-SUPABASE_ANON_KEY=eyJhbG...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
 
 # External APIs
@@ -254,11 +252,14 @@ ADMIN_PASSWORD_HASH=sha256-hash-of-password
 VITE_API_URL=https://myfitbody-api.onrender.com
 ```
 
-### Frontend
+### Frontend (`frontend/.env.local`)
 
-Configure in code or use Expo constants:
-- Clerk Publishable Key
-- Backend API URL
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
+```
+
+Also set these in the EAS project environment (development/preview/production). The backend API URL is configured in code.
 
 ---
 
@@ -274,7 +275,12 @@ To completely reset the database:
 
 ### Apply Migrations
 
-Individual migrations are in `backend/migrations/`. Run them in order if updating an existing database.
+Schema scripts live in `database/`:
+- `001_complete_schema.sql` - Full schema (RLS enabled on all 19 tables with no policies; the backend uses the service role key, and the anon key is used for auth only)
+- `002_supabase_auth.sql` - Adds `auth_user_id` (links users to Supabase Auth)
+- `003_drop_clerk.sql` - Drops the legacy `clerk_user_id` column
+
+Older individual migrations are in `backend/migrations/`. Run them in order if updating an existing database.
 
 ---
 
@@ -312,7 +318,7 @@ curl https://myfitbody-api.onrender.com/health
 
 1. Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
 2. Check Supabase project status
-3. Ensure RLS policies allow access
+3. Ensure the backend is using the service role key (RLS is enabled on all tables with no policies, so the anon key cannot read data)
 
 ### Admin Dashboard 404s
 
@@ -354,7 +360,9 @@ myfitbody/
 │
 ├── database/           # SQL scripts
 │   ├── 000_drop_all.sql
-│   └── 001_complete_schema.sql
+│   ├── 001_complete_schema.sql
+│   ├── 002_supabase_auth.sql
+│   └── 003_drop_clerk.sql
 │
 └── PROJECT_SETUP.md    # This file
 ```
@@ -365,7 +373,6 @@ myfitbody/
 
 - **Supabase Dashboard**: https://supabase.com/dashboard
 - **Render Dashboard**: https://dashboard.render.com
-- **Clerk Dashboard**: https://dashboard.clerk.com
 - **OpenAI Platform**: https://platform.openai.com
 - **Expo**: https://expo.dev
 

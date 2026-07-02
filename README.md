@@ -23,7 +23,7 @@ AI-powered fitness and nutrition tracking app with cross-platform support (Web, 
 - Cross-platform (Web, iOS, Android)
 
 **Authentication:**
-- Clerk
+- Supabase Auth (email + password)
 
 **Hosting:**
 - Render
@@ -58,7 +58,7 @@ npm install
 Create `.env` file with:
 ```
 SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 OPENAI_API_KEY=your_openai_key
 PORT=3000
 NODE_ENV=development
@@ -66,7 +66,7 @@ NODE_ENV=development
 
 3. Run database migrations:
 - Go to your Supabase dashboard
-- Run the SQL in `backend/schema.sql`
+- Run the SQL in `database/001_complete_schema.sql`
 
 4. Start the server:
 ```bash
@@ -97,9 +97,10 @@ npm start    # Production
 
 ## Authentication
 
-All API routes (except `/health`) require authentication headers:
-- `x-clerk-user-id`: The Clerk user ID
-- `x-user-email`: User's email address
+All API routes (except `/health`) require a Supabase Auth access token:
+- `Authorization: Bearer <supabase access token>`
+
+The token is verified server-side via `supabase.auth.getUser()`, and middleware resolves (or auto-creates) the app user row via `users.auth_user_id`.
 
 ## Development
 

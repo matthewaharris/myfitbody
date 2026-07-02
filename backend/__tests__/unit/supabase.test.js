@@ -1,266 +1,167 @@
 /**
- * MOCKING SUPABASE - A Comprehensive Example
+ * Unit Tests for getOrLinkUserByAuthId
  *
- * This file demonstrates how to mock external dependencies (Supabase)
- * so you can test your code without hitting a real database.
+ * This is the identity-resolution core of auth: given a verified Supabase
+ * Auth UID + email, it must (in order):
+ *   1. return the user matched by auth_user_id
+ *   2. else link a pre-existing row by email (sets auth_user_id)
+ *   3. else create a new user + default profile
+ *
+ * Supabase is mocked with a result queue: each terminal call
+ * (maybeSingle/single/await) consumes the next queued {data, error}.
  */
 
 import { jest } from '@jest/globals';
 
-// =============================================================================
-// STEP 1: MOCK THE MODULE
-// =============================================================================
-//
-// We need to mock '@supabase/supabase-js' BEFORE importing our code.
-// jest.unstable_mockModule is used for ES modules (your project uses "type": "module")
-//
-// The mock replaces the real Supabase client with a fake one we control.
+// Queue of results, consumed in the order queries resolve
+let resultQueue = [];
+const nextResult = () =>
+  resultQueue.length > 0 ? resultQueue.shift() : { data: null, error: null };
 
-// Create mock functions we can configure per-test
-const mockSelect = jest.fn();
-const mockInsert = jest.fn();
-const mockEq = jest.fn();
-const mockMaybeSingle = jest.fn();
-const mockSingle = jest.fn();
+const makeChain = () => {
+  const chain = {
+    select: jest.fn(() => chain),
+    insert: jest.fn(() => chain),
+    update: jest.fn(() => chain),
+    eq: jest.fn(() => chain),
+    is: jest.fn(() => chain),
+    order: jest.fn(() => chain),
+    limit: jest.fn(() => chain),
+    maybeSingle: jest.fn(() => Promise.resolve(nextResult())),
+    single: jest.fn(() => Promise.resolve(nextResult())),
+    // Chains awaited without a terminal method (e.g. .limit(1), bare insert)
+    then: (resolve) => resolve(nextResult()),
+  };
+  return chain;
+};
 
-// Build a chainable mock that mimics Supabase's fluent API:
-// supabase.from('users').select('*').eq('id', 1).single()
-const mockFrom = jest.fn(() => ({
-  select: mockSelect.mockReturnValue({
-    eq: mockEq.mockReturnValue({
-      maybeSingle: mockMaybeSingle,
-      single: mockSingle,
-    }),
-  }),
-  insert: mockInsert.mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      single: mockSingle,
-    }),
-  }),
-}));
+const chains = [];
+const mockFrom = jest.fn((table) => {
+  const chain = makeChain();
+  chains.push({ table, chain });
+  return chain;
+});
 
-// Mock the entire @supabase/supabase-js module
 jest.unstable_mockModule('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    from: mockFrom,
-  })),
+  createClient: jest.fn(() => ({ from: mockFrom })),
 }));
 
-// =============================================================================
-// STEP 2: IMPORT YOUR CODE AFTER MOCKING
-// =============================================================================
-//
-// IMPORTANT: Dynamic import MUST happen after jest.unstable_mockModule
-// This ensures your code gets the mocked version, not the real Supabase
+const { getOrLinkUserByAuthId } = await import('../../src/utils/supabase.js');
 
-const { getUserByClerkId, createOrGetUser } = await import('../../src/utils/supabase.js');
-
-// =============================================================================
-// STEP 3: RESET MOCKS BETWEEN TESTS
-// =============================================================================
-//
-// Each test should start with a clean slate. beforeEach runs before every test.
+const AUTH_UID = 'auth-uuid-123';
+const EMAIL = 'test@example.com';
 
 beforeEach(() => {
-  // Clear all mock call history and reset return values
   jest.clearAllMocks();
+  resultQueue = [];
+  chains.length = 0;
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+  jest.spyOn(console, 'log').mockImplementation(() => {});
 });
 
-// =============================================================================
-// TESTS FOR getUserByClerkId
-// =============================================================================
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
-describe('getUserByClerkId', () => {
+describe('getOrLinkUserByAuthId', () => {
 
-  // -------------------------------------------------------------------------
-  // TEST 1: Happy path - user exists
-  // -------------------------------------------------------------------------
-  test('returns user when found', async () => {
-    // ARRANGE: Configure the mock to return a user
-    const mockUser = {
-      id: 'uuid-123',
-      clerk_user_id: 'clerk_abc',
-      email: 'test@example.com',
-    };
+  test('returns user matched by auth_user_id', async () => {
+    const user = { id: 'uuid-1', auth_user_id: AUTH_UID, email: EMAIL };
+    resultQueue = [{ data: user, error: null }];
 
-    // Tell the mock what to return when called
-    mockMaybeSingle.mockResolvedValue({
-      data: mockUser,
-      error: null,
-    });
+    const result = await getOrLinkUserByAuthId(AUTH_UID, EMAIL);
 
-    // ACT: Call the function
-    const result = await getUserByClerkId('clerk_abc');
-
-    // ASSERT: Verify the result
-    expect(result).toEqual(mockUser);
-
-    // VERIFY: Check that Supabase was called correctly
+    expect(result).toEqual(user);
+    expect(mockFrom).toHaveBeenCalledTimes(1);
     expect(mockFrom).toHaveBeenCalledWith('users');
-    expect(mockSelect).toHaveBeenCalledWith('*');
-    expect(mockEq).toHaveBeenCalledWith('clerk_user_id', 'clerk_abc');
   });
 
-  // -------------------------------------------------------------------------
-  // TEST 2: User not found
-  // -------------------------------------------------------------------------
-  test('returns null when user not found', async () => {
-    // ARRANGE: maybeSingle returns null data when no rows match
-    mockMaybeSingle.mockResolvedValue({
-      data: null,
-      error: null,
+  test('links a pre-existing row by email when no auth_user_id match', async () => {
+    const legacyUser = { id: 'uuid-legacy', auth_user_id: null, email: EMAIL };
+    const linkedUser = { ...legacyUser, auth_user_id: AUTH_UID };
+    resultQueue = [
+      { data: null, error: null },         // auth_user_id lookup: miss
+      { data: [legacyUser], error: null }, // email lookup: hit
+      { data: linkedUser, error: null },   // update: linked row
+    ];
+
+    const result = await getOrLinkUserByAuthId(AUTH_UID, EMAIL);
+
+    expect(result).toEqual(linkedUser);
+    const updateChain = chains[2].chain;
+    expect(updateChain.update).toHaveBeenCalledWith({ auth_user_id: AUTH_UID });
+    expect(updateChain.eq).toHaveBeenCalledWith('id', 'uuid-legacy');
+  });
+
+  test('creates user and default profile when no matches', async () => {
+    const created = { id: 'uuid-new', auth_user_id: AUTH_UID, email: EMAIL };
+    resultQueue = [
+      { data: null, error: null },    // auth_user_id lookup: miss
+      { data: [], error: null },      // email lookup: miss
+      { data: created, error: null }, // insert user
+      { data: null, error: null },    // insert default profile
+    ];
+
+    const result = await getOrLinkUserByAuthId(AUTH_UID, EMAIL);
+
+    expect(result).toEqual(created);
+    const userInsertChain = chains[2];
+    expect(userInsertChain.table).toBe('users');
+    expect(userInsertChain.chain.insert).toHaveBeenCalledWith({
+      auth_user_id: AUTH_UID,
+      email: EMAIL,
     });
+    const profileChain = chains[3];
+    expect(profileChain.table).toBe('user_profiles');
+    expect(profileChain.chain.insert).toHaveBeenCalledWith({ user_id: 'uuid-new' });
+  });
 
-    // ACT
-    const result = await getUserByClerkId('nonexistent_clerk_id');
+  test('skips email linking when email is missing', async () => {
+    const created = { id: 'uuid-new', auth_user_id: AUTH_UID, email: null };
+    resultQueue = [
+      { data: null, error: null },    // auth_user_id lookup: miss
+      { data: created, error: null }, // insert user (no email lookup)
+      { data: null, error: null },    // insert default profile
+    ];
 
-    // ASSERT
+    const result = await getOrLinkUserByAuthId(AUTH_UID, undefined);
+
+    expect(result).toEqual(created);
+    // Only 3 queries: lookup, insert user, insert profile
+    expect(mockFrom).toHaveBeenCalledTimes(3);
+  });
+
+  test('recovers from insert race (23505) by refetching', async () => {
+    const existing = { id: 'uuid-race', auth_user_id: AUTH_UID, email: EMAIL };
+    resultQueue = [
+      { data: null, error: null },              // auth_user_id lookup: miss
+      { data: [], error: null },                // email lookup: miss
+      { data: null, error: { code: '23505' } }, // insert: duplicate key
+      { data: existing, error: null },          // refetch by auth_user_id
+    ];
+
+    const result = await getOrLinkUserByAuthId(AUTH_UID, EMAIL);
+
+    expect(result).toEqual(existing);
+  });
+
+  test('returns null on lookup error', async () => {
+    resultQueue = [
+      { data: null, error: { message: 'connection failed' } },
+    ];
+
+    const result = await getOrLinkUserByAuthId(AUTH_UID, EMAIL);
+
     expect(result).toBeNull();
   });
 
-  // -------------------------------------------------------------------------
-  // TEST 3: Database error
-  // -------------------------------------------------------------------------
-  test('returns null and logs error on database failure', async () => {
-    // ARRANGE: Simulate a database error
-    const dbError = { message: 'Connection failed', code: 'PGRST000' };
-    mockMaybeSingle.mockResolvedValue({
-      data: null,
-      error: dbError,
-    });
+  test('throws on non-duplicate insert error', async () => {
+    resultQueue = [
+      { data: null, error: null },
+      { data: [], error: null },
+      { data: null, error: { code: '42501', message: 'permission denied' } },
+    ];
 
-    // Spy on console.error to verify error logging
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    // ACT
-    const result = await getUserByClerkId('clerk_abc');
-
-    // ASSERT
-    expect(result).toBeNull();
-    expect(consoleSpy).toHaveBeenCalledWith('Error fetching user:', dbError);
-
-    // Cleanup: restore console.error
-    consoleSpy.mockRestore();
-  });
-});
-
-// =============================================================================
-// TESTS FOR createOrGetUser
-// =============================================================================
-
-describe('createOrGetUser', () => {
-
-  // -------------------------------------------------------------------------
-  // TEST 1: User already exists - should return existing user
-  // -------------------------------------------------------------------------
-  test('returns existing user without creating new one', async () => {
-    // ARRANGE: User already exists
-    const existingUser = {
-      id: 'uuid-123',
-      clerk_user_id: 'clerk_abc',
-      email: 'existing@example.com',
-    };
-
-    mockMaybeSingle.mockResolvedValue({
-      data: existingUser,
-      error: null,
-    });
-
-    // ACT
-    const result = await createOrGetUser('clerk_abc', 'existing@example.com');
-
-    // ASSERT
-    expect(result).toEqual(existingUser);
-
-    // Verify insert was NOT called (we returned early)
-    expect(mockInsert).not.toHaveBeenCalled();
-  });
-
-  // -------------------------------------------------------------------------
-  // TEST 2: New user - should create user and profile
-  // -------------------------------------------------------------------------
-  test('creates new user when not found', async () => {
-    // ARRANGE
-    const newUser = {
-      id: 'uuid-456',
-      clerk_user_id: 'clerk_new',
-      email: 'new@example.com',
-    };
-
-    // First call to getUserByClerkId returns null (user doesn't exist)
-    mockMaybeSingle.mockResolvedValueOnce({
-      data: null,
-      error: null,
-    });
-
-    // Insert returns the new user
-    mockSingle.mockResolvedValueOnce({
-      data: newUser,
-      error: null,
-    });
-
-    // ACT
-    const result = await createOrGetUser('clerk_new', 'new@example.com');
-
-    // ASSERT
-    expect(result).toEqual(newUser);
-
-    // Verify insert was called with correct data
-    expect(mockInsert).toHaveBeenCalledWith({
-      clerk_user_id: 'clerk_new',
-      email: 'new@example.com',
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // TEST 3: Race condition - duplicate key error (23505)
-  // -------------------------------------------------------------------------
-  test('handles race condition by fetching existing user', async () => {
-    // ARRANGE: Simulate a race condition
-    // Two requests try to create the same user simultaneously
-    const existingUser = {
-      id: 'uuid-123',
-      clerk_user_id: 'clerk_race',
-      email: 'race@example.com',
-    };
-
-    // First call: user doesn't exist
-    mockMaybeSingle
-      .mockResolvedValueOnce({ data: null, error: null })
-      // Second call (after duplicate error): user now exists
-      .mockResolvedValueOnce({ data: existingUser, error: null });
-
-    // Insert fails with duplicate key error
-    mockSingle.mockResolvedValueOnce({
-      data: null,
-      error: { code: '23505', message: 'duplicate key value' },
-    });
-
-    // ACT
-    const result = await createOrGetUser('clerk_race', 'race@example.com');
-
-    // ASSERT: Should recover and return the existing user
-    expect(result).toEqual(existingUser);
-  });
-
-  // -------------------------------------------------------------------------
-  // TEST 4: Non-recoverable database error
-  // -------------------------------------------------------------------------
-  test('throws error on non-duplicate database failure', async () => {
-    // ARRANGE
-    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockSingle.mockResolvedValue({
-      data: null,
-      error: { code: 'PGRST000', message: 'Connection failed' },
-    });
-
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    // ACT & ASSERT: Expect the function to throw
-    await expect(createOrGetUser('clerk_fail', 'fail@example.com'))
-      .rejects
-      .toThrow('Failed to create user');
-
-    consoleSpy.mockRestore();
+    await expect(getOrLinkUserByAuthId(AUTH_UID, EMAIL)).rejects.toThrow('Failed to create user');
   });
 });

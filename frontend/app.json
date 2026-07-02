@@ -59,7 +59,6 @@
           "color": "#ffffff"
         }
       ],
-      "expo-secure-store",
       "expo-web-browser"
     ],
     "extra": {

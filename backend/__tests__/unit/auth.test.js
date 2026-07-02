@@ -14,8 +14,6 @@ const mockGetOrLinkUserByAuthId = jest.fn();
 const mockGetUser = jest.fn();
 
 jest.unstable_mockModule('../../src/utils/supabase.js', () => ({
-  getUserByClerkId: jest.fn(),
-  createOrGetUser: jest.fn(),
   getOrLinkUserByAuthId: mockGetOrLinkUserByAuthId,
   supabase: {
     auth: {
