@@ -13,6 +13,7 @@ import { useAuth, useUser } from '../hooks/useAuth';
 import {
   getWeeklyStats,
   getStreaks,
+  getUserStats,
   setAuthToken,
   setUserInfo,
 } from '../services/api';
@@ -117,6 +118,7 @@ export default function StatsScreen({ onNavigate }) {
 
   const [stats, setStats] = useState(null);
   const [streaks, setStreaks] = useState(null);
+  const [allTime, setAllTime] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'calories', 'weight'
@@ -135,12 +137,14 @@ export default function StatsScreen({ onNavigate }) {
 
   const loadData = async () => {
     try {
-      const [statsData, streaksData] = await Promise.all([
+      const [statsData, streaksData, allTimeData] = await Promise.all([
         getWeeklyStats(8),
         getStreaks(),
+        getUserStats().catch(() => null),
       ]);
       setStats(statsData);
       setStreaks(streaksData);
+      setAllTime(allTimeData);
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
@@ -322,6 +326,53 @@ export default function StatsScreen({ onNavigate }) {
                 label="Avg Daily Calories by Week"
               />
             </View>
+
+            {/* All Time Stats */}
+            {allTime && (
+              <>
+                <Text style={styles.allTimeTitle}>All Time</Text>
+                <View style={styles.summaryContainer}>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>
+                      {allTime.total_workouts.toLocaleString()}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Workouts</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>
+                      {allTime.total_exercises.toLocaleString()}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Exercises Done</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>
+                      {allTime.active_days.toLocaleString()}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Active Days</Text>
+                  </View>
+                </View>
+                <View style={styles.summaryContainer}>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>
+                      {allTime.total_meals.toLocaleString()}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Meals Logged</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>
+                      {allTime.total_checkins.toLocaleString()}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Mood Check-ins</Text>
+                  </View>
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryValue}>
+                      {allTime.longest_workout_streak}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Longest Streak (days)</Text>
+                  </View>
+                </View>
+              </>
+            )}
           </>
         )}
 
@@ -539,6 +590,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 12,
     marginBottom: 16,
+  },
+  allTimeTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginHorizontal: 16,
+    marginBottom: 12,
   },
   summaryCard: {
     flex: 1,

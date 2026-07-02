@@ -3855,28 +3855,60 @@ app.put('/api/reminders/settings', requireAuth, async (req, res) => {
 // Get user stats
 app.get('/api/stats/user', requireAuth, async (req, res) => {
   try {
-    let { data, error } = await supabase
-      .from('user_stats')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .single();
+    const userId = req.user.id;
 
-    if (error && error.code === 'PGRST116') {
-      // No stats yet, return defaults
-      data = {
-        total_workouts: 0,
-        total_meals: 0,
-        total_checkins: 0,
-        current_workout_streak: 0,
-        longest_workout_streak: 0,
-        current_meal_streak: 0,
-        longest_meal_streak: 0
-      };
-    } else if (error) {
-      throw error;
+    // Totals are computed live from source tables — the counters in
+    // user_stats are only partially maintained (meals/checkins never
+    // increment). Streaks still come from user_stats.
+    const [workoutsRes, exercisesRes, mealsRes, checkinsRes, statsRes] = await Promise.all([
+      supabase
+        .from('workouts')
+        .select('workout_date')
+        .eq('user_id', userId)
+        .or('is_template.is.null,is_template.eq.false'),
+      supabase
+        .from('workout_exercises')
+        .select('id, workouts!inner(user_id, is_template)', { count: 'exact', head: true })
+        .eq('workouts.user_id', userId)
+        .or('is_template.is.null,is_template.eq.false', { foreignTable: 'workouts' }),
+      supabase
+        .from('meals')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId),
+      supabase
+        .from('mood_checkins')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId),
+      supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
+
+    for (const r of [workoutsRes, exercisesRes, mealsRes, checkinsRes, statsRes]) {
+      if (r.error) throw r.error;
     }
 
-    res.json(data);
+    const workouts = workoutsRes.data || [];
+    const activeDays = new Set(
+      workouts
+        .filter((w) => w.workout_date)
+        .map((w) => new Date(w.workout_date).toISOString().slice(0, 10))
+    ).size;
+    const streaks = statsRes.data || {};
+
+    res.json({
+      total_workouts: workouts.length,
+      total_exercises: exercisesRes.count || 0,
+      active_days: activeDays,
+      total_meals: mealsRes.count || 0,
+      total_checkins: checkinsRes.count || 0,
+      current_workout_streak: streaks.current_workout_streak || 0,
+      longest_workout_streak: streaks.longest_workout_streak || 0,
+      current_meal_streak: streaks.current_meal_streak || 0,
+      longest_meal_streak: streaks.longest_meal_streak || 0,
+    });
   } catch (error) {
     console.error('Error fetching user stats:', error);
     res.status(500).json({ error: 'Failed to fetch user stats' });
