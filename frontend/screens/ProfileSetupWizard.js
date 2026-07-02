@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useAuth, useUser } from '../hooks/useAuth';
-import { createUser, createUserProfile, setAuthToken, setUserInfo } from '../services/api';
+import { createUser, createUserProfile, searchFoods, setAuthToken, setUserInfo } from '../services/api';
 
 const STEPS = ['Personal', 'Goals', 'Diet', 'Foods', 'Macros', 'Notifications'];
 
@@ -88,18 +88,15 @@ export default function ProfileSetupWizard({ onComplete, onSkip }) {
 
     setValidatingFood(true);
     try {
-      // Validate by searching for the food in the food database
-      const response = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(foodName)}&search_simple=1&action=process&json=1&page_size=5`
-      );
-      const data = await response.json();
+      // Validate via our backend's food search (USDA + OpenFoodFacts)
+      const data = await searchFoods(foodName);
 
       // Check if we got reasonable results
-      const hasResults = data.products && data.products.length > 0;
-      const matchesSearch = hasResults && data.products.some(p =>
-        p.product_name?.toLowerCase().includes(foodName) ||
-        p.generic_name?.toLowerCase().includes(foodName) ||
-        p.categories?.toLowerCase().includes(foodName)
+      const foods = data.foods || [];
+      const hasResults = foods.length > 0;
+      const matchesSearch = hasResults && foods.some(f =>
+        f.name?.toLowerCase().includes(foodName) ||
+        f.category?.toLowerCase().includes(foodName)
       );
 
       // Common food categories that might not be in OpenFoodFacts but are valid
