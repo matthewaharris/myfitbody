@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { supabase } from './services/supabase';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import ProfileSetupWizard from './screens/ProfileSetupWizard';
@@ -137,6 +137,36 @@ function SignUpScreen({ onNavigate }) {
 
 // Note: HomeScreen is now imported from ./screens/HomeScreen
 
+// Persistent bottom tab bar for the main sections. Other screens
+// (water, sauna, meal, ...) still render above it; no tab is highlighted.
+const TABS = [
+  { key: 'home', icon: '🏠', label: 'Home' },
+  { key: 'progress', icon: '📊', label: 'Progress' },
+  { key: 'stats', icon: '📈', label: 'Stats' },
+  { key: 'ai', icon: '🤖', label: 'AI' },
+  { key: 'profile', icon: '👤', label: 'Profile' },
+];
+
+function TabBar({ active, onNavigate }) {
+  return (
+    <View style={styles.tabBar}>
+      {TABS.map((tab) => {
+        const isActive = active === tab.key;
+        return (
+          <TouchableOpacity
+            key={tab.key}
+            style={styles.tabItem}
+            onPress={() => onNavigate(tab.key)}
+          >
+            <Text style={[styles.tabIcon, !isActive && styles.tabIconInactive]}>{tab.icon}</Text>
+            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{tab.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
 // Main App with custom navigation
 function MainApp() {
   const { isSignedIn, isLoaded, user } = useAuth();
@@ -268,82 +298,42 @@ function MainApp() {
       );
     }
 
-    // Profile editing screen
-    if (appScreen === 'profile') {
-      return <ProfileScreen onNavigate={navigate} />;
-    }
+    const screens = {
+      profile: <ProfileScreen onNavigate={navigate} />,
+      workout: (
+        <WorkoutScreen
+          onNavigate={navigate}
+          workoutId={navParams.workoutId}
+          cloneFromId={navParams.cloneFromId}
+        />
+      ),
+      meal: (
+        <MealScreen
+          onNavigate={navigate}
+          editMealId={navParams.editMealId}
+          mealType={navParams.mealType}
+          date={navParams.date}
+        />
+      ),
+      progress: <ProgressScreen onNavigate={navigate} />,
+      water: <WaterScreen onNavigate={navigate} />,
+      sauna: <SaunaScreen onNavigate={navigate} />,
+      stats: <StatsScreen onNavigate={navigate} />,
+      recipes: <RecipeScreen onNavigate={navigate} />,
+      ai: <AIScreen onNavigate={navigate} />,
+      mood: <MoodCheckinScreen onNavigate={navigate} />,
+      badges: <BadgesScreen onNavigate={navigate} />,
+      journal: <JournalScreen onNavigate={navigate} />,
+      reminders: <ReminderSettingsScreen onNavigate={navigate} />,
+      home: <HomeScreen onNavigate={navigate} />,
+    };
 
-    // Workout logging screen
-    if (appScreen === 'workout') {
-      return <WorkoutScreen
-        onNavigate={navigate}
-        workoutId={navParams.workoutId}
-        cloneFromId={navParams.cloneFromId}
-      />;
-    }
-
-    // Meal logging screen
-    if (appScreen === 'meal') {
-      return <MealScreen
-        onNavigate={navigate}
-        editMealId={navParams.editMealId}
-        mealType={navParams.mealType}
-        date={navParams.date}
-      />;
-    }
-
-    // Progress/Measurements screen
-    if (appScreen === 'progress') {
-      return <ProgressScreen onNavigate={navigate} />;
-    }
-
-    // Water intake screen
-    if (appScreen === 'water') {
-      return <WaterScreen onNavigate={navigate} />;
-    }
-
-    // Sauna sessions screen
-    if (appScreen === 'sauna') {
-      return <SaunaScreen onNavigate={navigate} />;
-    }
-
-    // Stats/charts screen
-    if (appScreen === 'stats') {
-      return <StatsScreen onNavigate={navigate} />;
-    }
-
-    // Recipe management screen
-    if (appScreen === 'recipes') {
-      return <RecipeScreen onNavigate={navigate} />;
-    }
-
-    // AI Assistant screen
-    if (appScreen === 'ai') {
-      return <AIScreen onNavigate={navigate} />;
-    }
-
-    // Mood Check-in screen
-    if (appScreen === 'mood') {
-      return <MoodCheckinScreen onNavigate={navigate} />;
-    }
-
-    // Badges/Achievements screen
-    if (appScreen === 'badges') {
-      return <BadgesScreen onNavigate={navigate} />;
-    }
-
-    // Journal screen
-    if (appScreen === 'journal') {
-      return <JournalScreen onNavigate={navigate} />;
-    }
-
-    // Reminder settings screen
-    if (appScreen === 'reminders') {
-      return <ReminderSettingsScreen onNavigate={navigate} />;
-    }
-
-    // Default: Home screen
-    return <HomeScreen onNavigate={navigate} />;
+    return (
+      <View style={styles.appContainer}>
+        <View style={styles.screenContainer}>{screens[appScreen] || screens.home}</View>
+        <TabBar active={appScreen} onNavigate={navigate} />
+      </View>
+    );
   }
 
   if (currentScreen === 'signup') {
@@ -367,6 +357,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
     backgroundColor: '#fff',
+  },
+  appContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  screenContainer: {
+    flex: 1,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 8,
+    paddingBottom: 28,
+    paddingHorizontal: 8,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  tabIcon: {
+    fontSize: 22,
+    marginBottom: 2,
+  },
+  tabIconInactive: {
+    opacity: 0.45,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  tabLabelActive: {
+    color: colors.primary,
   },
   title: {
     fontSize: 24,
