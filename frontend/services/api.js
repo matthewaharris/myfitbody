@@ -301,6 +301,22 @@ export const updateWaterGoal = async (goalOz) => {
   return response.data;
 };
 
+// Sauna Sessions
+export const getSaunaSessions = async (limit = 50) => {
+  const response = await api.get('/sauna-sessions', { params: { limit } });
+  return response.data;
+};
+
+export const logSaunaSession = async (sessionData) => {
+  const response = await api.post('/sauna-sessions', sessionData);
+  return response.data;
+};
+
+export const deleteSaunaSession = async (sessionId) => {
+  const response = await api.delete(`/sauna-sessions/${sessionId}`);
+  return response.data;
+};
+
 // Streak Tracking
 export const getStreaks = async () => {
   const response = await api.get('/streaks');

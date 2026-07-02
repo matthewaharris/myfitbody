@@ -1620,6 +1620,79 @@ app.patch('/api/water/goal', requireAuth, async (req, res) => {
 });
 
 // =============================================
+// SAUNA SESSIONS
+// =============================================
+
+// Get sauna session history
+app.get('/api/sauna-sessions', requireAuth, async (req, res) => {
+  try {
+    const { limit = 50 } = req.query;
+
+    const { data, error } = await supabase
+      .from('sauna_sessions')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('session_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching sauna sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch sauna sessions' });
+  }
+});
+
+// Log a sauna session
+app.post('/api/sauna-sessions', requireAuth, async (req, res) => {
+  try {
+    const { session_date, temperature_f, duration_minutes, notes } = req.body;
+
+    if (!duration_minutes || duration_minutes < 1) {
+      return res.status(400).json({ error: 'duration_minutes is required' });
+    }
+
+    const { data, error } = await supabase
+      .from('sauna_sessions')
+      .insert({
+        user_id: req.user.id,
+        session_date: session_date || undefined,
+        temperature_f: temperature_f || null,
+        duration_minutes,
+        notes: notes || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error logging sauna session:', error);
+    res.status(500).json({ error: 'Failed to log sauna session' });
+  }
+});
+
+// Delete a sauna session
+app.delete('/api/sauna-sessions/:sessionId', requireAuth, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const { error } = await supabase
+      .from('sauna_sessions')
+      .delete()
+      .eq('id', sessionId)
+      .eq('user_id', req.user.id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting sauna session:', error);
+    res.status(500).json({ error: 'Failed to delete sauna session' });
+  }
+});
+
+// =============================================
 // STREAK TRACKING
 // =============================================
 

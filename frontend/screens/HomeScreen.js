@@ -299,6 +299,14 @@ export default function HomeScreen({ onNavigate }) {
 
           <TouchableOpacity
             style={styles.quickAccessButton}
+            onPress={() => onNavigate('sauna')}
+          >
+            <Text style={styles.quickAccessIcon}>🧖</Text>
+            <Text style={styles.quickAccessLabel}>Sauna</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickAccessButton}
             onPress={() => onNavigate('stats')}
           >
             <Text style={styles.quickAccessIcon}>📈</Text>

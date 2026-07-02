@@ -9,6 +9,7 @@ import WorkoutScreen from './screens/WorkoutScreen';
 import MealScreen from './screens/MealScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import WaterScreen from './screens/WaterScreen';
+import SaunaScreen from './screens/SaunaScreen';
 import StatsScreen from './screens/StatsScreen';
 import RecipeScreen from './screens/RecipeScreen';
 import AIScreen from './screens/AIScreen';
@@ -298,6 +299,11 @@ function MainApp() {
     // Water intake screen
     if (appScreen === 'water') {
       return <WaterScreen onNavigate={navigate} />;
+    }
+
+    // Sauna sessions screen
+    if (appScreen === 'sauna') {
+      return <SaunaScreen onNavigate={navigate} />;
     }
 
     // Stats/charts screen
