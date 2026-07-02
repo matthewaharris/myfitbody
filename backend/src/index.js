@@ -24,20 +24,31 @@ app.get('/health', (req, res) => {
 
 // --- USER ROUTES ---
 
-// Create user (called after Clerk signup)
+// Get the authenticated user's row (created/linked by requireAuth)
+app.get('/api/users/me', requireAuth, (req, res) => {
+  res.json(req.user);
+});
+
+// Complete user setup (called after signup)
+// The user row itself is created by requireAuth on first request;
+// this fills in the optional name/phone fields.
 app.post('/api/users', requireAuth, async (req, res) => {
   try {
-    const { clerk_user_id, email, first_name, last_name, phone_number } = req.body;
+    const { first_name, last_name, phone_number } = req.body;
+
+    const updates = {};
+    if (first_name !== undefined) updates.first_name = first_name;
+    if (last_name !== undefined) updates.last_name = last_name;
+    if (phone_number !== undefined) updates.phone_number = phone_number;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(201).json(req.user);
+    }
 
     const { data, error } = await supabase
       .from('users')
-      .insert({
-        clerk_user_id,
-        email,
-        first_name,
-        last_name,
-        phone_number
-      })
+      .update(updates)
+      .eq('id', req.user.id)
       .select()
       .single();
 
@@ -2309,12 +2320,6 @@ app.delete('/api/account', requireAuth, async (req, res) => {
     // Delete user profile
     await supabase.from('user_profiles').delete().eq('user_id', userId);
 
-    // Delete meal favorites
-    await supabase.from('meal_favorites').delete().eq('user_id', userId);
-
-    // Delete workout templates
-    await supabase.from('workout_templates').delete().eq('user_id', userId);
-
     // Finally delete the user
     const { error } = await supabase.from('users').delete().eq('id', userId);
 
@@ -3212,8 +3217,6 @@ app.delete('/api/admin/users/:userId', requireAdmin, async (req, res) => {
     await supabase.from('exercises').delete().eq('user_id', userId);
     await supabase.from('body_measurements').delete().eq('user_id', userId);
     await supabase.from('user_profiles').delete().eq('user_id', userId);
-    await supabase.from('meal_favorites').delete().eq('user_id', userId);
-    await supabase.from('workout_templates').delete().eq('user_id', userId);
 
     const { error } = await supabase.from('users').delete().eq('id', userId);
     if (error) throw error;

@@ -10,7 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../hooks/useAuth';
 import {
   getReminderSettings,
   updateReminderSettings,

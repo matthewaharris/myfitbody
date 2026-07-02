@@ -35,6 +35,83 @@ export async function getUserByClerkId(clerkUserId) {
   return data;
 }
 
+// Resolve the app user for a verified Supabase Auth UID.
+// Order: match auth_user_id -> link existing row by email -> create new user.
+// Linking by email lets pre-migration (Clerk-era) accounts keep all their data.
+export async function getOrLinkUserByAuthId(authUserId, email) {
+  const { data: existing, error: lookupError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+
+  if (lookupError) {
+    console.error('Error fetching user by auth id:', lookupError);
+    return null;
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  if (email) {
+    const { data: emailMatches, error: emailError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .is('auth_user_id', null)
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    if (emailError) {
+      console.error('Error fetching user by email:', emailError);
+    } else if (emailMatches && emailMatches.length > 0) {
+      const { data: linked, error: linkError } = await supabase
+        .from('users')
+        .update({ auth_user_id: authUserId })
+        .eq('id', emailMatches[0].id)
+        .select()
+        .single();
+
+      if (linkError) {
+        console.error('Error linking user by email:', linkError);
+      } else {
+        return linked;
+      }
+    }
+  }
+
+  const { data: created, error: createError } = await supabase
+    .from('users')
+    .insert({
+      auth_user_id: authUserId,
+      email: email
+    })
+    .select()
+    .single();
+
+  if (createError) {
+    // Handle race condition - if duplicate key error, fetch the existing user
+    if (createError.code === '23505') {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', authUserId)
+        .maybeSingle();
+      return data;
+    }
+    console.error('Error creating user:', createError);
+    throw new Error('Failed to create user');
+  }
+
+  // Create default user profile
+  await supabase.from('user_profiles').insert({
+    user_id: created.id
+  });
+
+  return created;
+}
+
 // Helper function to create or get user
 export async function createOrGetUser(clerkUserId, email) {
   // Try to get existing user

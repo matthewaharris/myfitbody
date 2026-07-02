@@ -2,32 +2,35 @@
  * Unit Tests for Auth Middleware
  *
  * Tests the requireAuth middleware including:
- * - Missing credentials
- * - User lookup/creation
+ * - Missing/invalid bearer tokens
+ * - User lookup/link/creation via getOrLinkUserByAuthId
  * - Error handling
  */
 
 import { jest } from '@jest/globals';
 
 // Mock the supabase utilities
-const mockCreateOrGetUser = jest.fn();
+const mockGetOrLinkUserByAuthId = jest.fn();
+const mockGetUser = jest.fn();
 
 jest.unstable_mockModule('../../src/utils/supabase.js', () => ({
   getUserByClerkId: jest.fn(),
-  createOrGetUser: mockCreateOrGetUser,
-  supabase: {},
+  createOrGetUser: jest.fn(),
+  getOrLinkUserByAuthId: mockGetOrLinkUserByAuthId,
+  supabase: {
+    auth: {
+      getUser: mockGetUser,
+    },
+  },
 }));
 
 // Import after mocking
 const { requireAuth } = await import('../../src/middleware/auth.js');
 
 // Helper to create mock request/response objects
-function createMockReqRes(headers = {}) {
+function createMockReqRes(token) {
   const req = {
-    headers: {
-      'x-clerk-user-id': headers.clerkUserId,
-      'x-user-email': headers.email,
-    },
+    headers: token ? { authorization: `Bearer ${token}` } : {},
   };
 
   const res = {
@@ -39,6 +42,8 @@ function createMockReqRes(headers = {}) {
 
   return { req, res, next };
 }
+
+const validAuthUser = { id: 'auth-uuid-123', email: 'test@example.com' };
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -52,17 +57,36 @@ afterEach(() => {
 describe('requireAuth middleware', () => {
 
   // -------------------------------------------------------------------------
-  // Missing Credentials Tests
+  // Missing/Invalid Credentials Tests
   // -------------------------------------------------------------------------
 
-  test('returns 401 when no clerk user ID provided', async () => {
-    const { req, res, next } = createMockReqRes({});
+  test('returns 401 when no bearer token provided', async () => {
+    const { req, res, next } = createMockReqRes(null);
 
     await requireAuth(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Unauthorized - No user ID provided',
+      error: 'Unauthorized - No token provided',
+    });
+    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('returns 401 when token is invalid or expired', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'invalid JWT' },
+    });
+
+    const { req, res, next } = createMockReqRes('bad-token');
+
+    await requireAuth(req, res, next);
+
+    expect(mockGetUser).toHaveBeenCalledWith('bad-token');
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Unauthorized - Invalid or expired token',
     });
     expect(next).not.toHaveBeenCalled();
   });
@@ -74,20 +98,19 @@ describe('requireAuth middleware', () => {
   test('attaches user to request and calls next on success', async () => {
     const mockUser = {
       id: 'uuid-123',
-      clerk_user_id: 'clerk_abc',
+      auth_user_id: 'auth-uuid-123',
       email: 'test@example.com',
     };
 
-    mockCreateOrGetUser.mockResolvedValue(mockUser);
+    mockGetUser.mockResolvedValue({ data: { user: validAuthUser }, error: null });
+    mockGetOrLinkUserByAuthId.mockResolvedValue(mockUser);
 
-    const { req, res, next } = createMockReqRes({
-      clerkUserId: 'clerk_abc',
-      email: 'test@example.com',
-    });
+    const { req, res, next } = createMockReqRes('good-token');
 
     await requireAuth(req, res, next);
 
-    expect(mockCreateOrGetUser).toHaveBeenCalledWith('clerk_abc', 'test@example.com');
+    expect(mockGetUser).toHaveBeenCalledWith('good-token');
+    expect(mockGetOrLinkUserByAuthId).toHaveBeenCalledWith('auth-uuid-123', 'test@example.com');
     expect(req.user).toEqual(mockUser);
     expect(next).toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
@@ -96,18 +119,20 @@ describe('requireAuth middleware', () => {
   test('works without email (optional field)', async () => {
     const mockUser = {
       id: 'uuid-123',
-      clerk_user_id: 'clerk_abc',
+      auth_user_id: 'auth-uuid-123',
     };
 
-    mockCreateOrGetUser.mockResolvedValue(mockUser);
-
-    const { req, res, next } = createMockReqRes({
-      clerkUserId: 'clerk_abc',
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'auth-uuid-123' } },
+      error: null,
     });
+    mockGetOrLinkUserByAuthId.mockResolvedValue(mockUser);
+
+    const { req, res, next } = createMockReqRes('good-token');
 
     await requireAuth(req, res, next);
 
-    expect(mockCreateOrGetUser).toHaveBeenCalledWith('clerk_abc', undefined);
+    expect(mockGetOrLinkUserByAuthId).toHaveBeenCalledWith('auth-uuid-123', undefined);
     expect(next).toHaveBeenCalled();
   });
 
@@ -116,11 +141,10 @@ describe('requireAuth middleware', () => {
   // -------------------------------------------------------------------------
 
   test('returns 401 when user not found', async () => {
-    mockCreateOrGetUser.mockResolvedValue(null);
+    mockGetUser.mockResolvedValue({ data: { user: validAuthUser }, error: null });
+    mockGetOrLinkUserByAuthId.mockResolvedValue(null);
 
-    const { req, res, next } = createMockReqRes({
-      clerkUserId: 'clerk_nonexistent',
-    });
+    const { req, res, next } = createMockReqRes('good-token');
 
     await requireAuth(req, res, next);
 
@@ -136,12 +160,10 @@ describe('requireAuth middleware', () => {
   // -------------------------------------------------------------------------
 
   test('returns 500 on database error', async () => {
-    mockCreateOrGetUser.mockRejectedValue(new Error('Database connection failed'));
+    mockGetUser.mockResolvedValue({ data: { user: validAuthUser }, error: null });
+    mockGetOrLinkUserByAuthId.mockRejectedValue(new Error('Database connection failed'));
 
-    const { req, res, next } = createMockReqRes({
-      clerkUserId: 'clerk_abc',
-      email: 'test@example.com',
-    });
+    const { req, res, next } = createMockReqRes('good-token');
 
     await requireAuth(req, res, next);
 
@@ -155,11 +177,10 @@ describe('requireAuth middleware', () => {
   test('logs error on failure', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const error = new Error('Test error');
-    mockCreateOrGetUser.mockRejectedValue(error);
+    mockGetUser.mockResolvedValue({ data: { user: validAuthUser }, error: null });
+    mockGetOrLinkUserByAuthId.mockRejectedValue(error);
 
-    const { req, res, next } = createMockReqRes({
-      clerkUserId: 'clerk_abc',
-    });
+    const { req, res, next } = createMockReqRes('good-token');
 
     await requireAuth(req, res, next);
 

@@ -15,7 +15,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../hooks/useAuth';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   searchFoods,

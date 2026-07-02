@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Button, TextInput, Alert } from 'react-native';
-import { ClerkProvider, useAuth, useSignIn, useSignUp, useUser } from '@clerk/clerk-expo';
-import * as SecureStore from 'expo-secure-store';
+import { supabase } from './services/supabase';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 import ProfileSetupWizard from './screens/ProfileSetupWizard';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -23,69 +23,25 @@ import {
   addNotificationResponseListener,
 } from './services/notifications';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-if (!publishableKey) {
-  throw new Error('Missing Publishable Key');
-}
-
-// Token cache for Clerk
-const tokenCache = {
-  async getToken(key) {
-    try {
-      const item = await SecureStore.getItemAsync(key);
-      return item;
-    } catch (err) {
-      return null;
-    }
-  },
-  async saveToken(key, value) {
-    try {
-      await SecureStore.setItemAsync(key, value);
-    } catch (err) {
-      return;
-    }
-  },
-};
-
 // Sign In Screen
 function SignInScreen({ onNavigate }) {
-  const { signIn, setActive, isLoaded } = useSignIn();
   const { isSignedIn } = useAuth();
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
 
   const onSignInPress = async () => {
-    if (!isLoaded) return;
+    // Already have a session, just return
+    if (isSignedIn) return;
 
-    try {
-      // Check if already signed in
-      if (isSignedIn) {
-        // Already have a session, just return
-        return;
-      }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: emailAddress.trim(),
+      password,
+    });
 
-      const completeSignIn = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-
-      await setActive({ session: completeSignIn.createdSessionId });
-    } catch (err) {
-      // Handle "session already exists" error
-      if (err.errors?.[0]?.code === 'session_exists') {
-        // Session exists, try to use it
-        try {
-          if (signIn.createdSessionId) {
-            await setActive({ session: signIn.createdSessionId });
-          }
-        } catch (e) {
-          console.log('Could not activate existing session');
-        }
-        return;
-      }
-      Alert.alert('Error', err.errors ? err.errors[0].message : 'Sign in failed');
+    if (error) {
+      Alert.alert('Error', error.message || 'Sign in failed');
     }
+    // Success: onAuthStateChange in AuthProvider flips isSignedIn
   };
 
   return (
@@ -120,89 +76,54 @@ function SignInScreen({ onNavigate }) {
 
 // Sign Up Screen
 function SignUpScreen({ onNavigate }) {
-  const { isLoaded, signUp, setActive } = useSignUp();
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [code, setCode] = useState('');
 
   const onSignUpPress = async () => {
-    if (!isLoaded) return;
+    const { data, error } = await supabase.auth.signUp({
+      email: emailAddress.trim(),
+      password,
+    });
 
-    try {
-      await signUp.create({
-        emailAddress,
-        password,
-      });
-
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification(true);
-    } catch (err) {
-      Alert.alert('Error', err.errors ? err.errors[0].message : 'Sign up failed');
+    if (error) {
+      Alert.alert('Error', error.message || 'Sign up failed');
+      return;
     }
-  };
 
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
-
-    try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
-      });
-
-      await setActive({ session: completeSignUp.createdSessionId });
-    } catch (err) {
-      Alert.alert('Error', err.errors ? err.errors[0].message : 'Verification failed');
+    // Email confirmation is disabled in Supabase, so a session comes back
+    // immediately. If it's ever re-enabled, tell the user what to do next.
+    if (!data.session) {
+      Alert.alert('Verify Your Email', `We've sent a confirmation link to ${emailAddress}. Tap it, then sign in.`);
+      onNavigate('signin');
     }
   };
 
   return (
     <View style={styles.container}>
-      {!pendingVerification ? (
-        <>
-          <Text style={styles.title}>Sign Up for MyFitBody</Text>
+      <Text style={styles.title}>Sign Up for MyFitBody</Text>
 
-          <TextInput
-            autoCapitalize="none"
-            value={emailAddress}
-            placeholder="Email"
-            onChangeText={setEmailAddress}
-            style={styles.input}
-          />
+      <TextInput
+        autoCapitalize="none"
+        value={emailAddress}
+        placeholder="Email"
+        onChangeText={setEmailAddress}
+        style={styles.input}
+      />
 
-          <TextInput
-            value={password}
-            placeholder="Password"
-            secureTextEntry
-            onChangeText={setPassword}
-            style={styles.input}
-          />
+      <TextInput
+        value={password}
+        placeholder="Password"
+        secureTextEntry
+        onChangeText={setPassword}
+        style={styles.input}
+      />
 
-          <Button title="Sign Up" onPress={onSignUpPress} />
+      <Button title="Sign Up" onPress={onSignUpPress} />
 
-          <View style={styles.footer}>
-            <Text>Already have an account? </Text>
-            <Button title="Sign In" onPress={() => onNavigate('signin')} />
-          </View>
-        </>
-      ) : (
-        <>
-          <Text style={styles.title}>Verify Your Email</Text>
-          <Text style={styles.subtitle}>
-            We've sent a verification code to {emailAddress}
-          </Text>
-
-          <TextInput
-            value={code}
-            placeholder="Enter verification code"
-            onChangeText={setCode}
-            style={styles.input}
-            keyboardType="number-pad"
-          />
-
-          <Button title="Verify Email" onPress={onVerifyPress} />
-        </>
-      )}
+      <View style={styles.footer}>
+        <Text>Already have an account? </Text>
+        <Button title="Sign In" onPress={() => onNavigate('signin')} />
+      </View>
     </View>
   );
 }
@@ -417,9 +338,9 @@ function MainApp() {
 
 export default function App() {
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+    <AuthProvider>
       <MainApp />
-    </ClerkProvider>
+    </AuthProvider>
   );
 }
 

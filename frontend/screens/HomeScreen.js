@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../hooks/useAuth';
 import { getDailyStats, getWorkouts, getMeals, getUserByClerkId, setAuthToken, setUserInfo, getSmartSuggestions, getCalorieBurnSuggestions, deleteMeal } from '../services/api';
 
 export default function HomeScreen({ onNavigate }) {

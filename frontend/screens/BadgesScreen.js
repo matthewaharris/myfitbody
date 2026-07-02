@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   Dimensions,
 } from 'react-native';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../hooks/useAuth';
 import {
   getBadgeProgress,
   getEarnedBadges,

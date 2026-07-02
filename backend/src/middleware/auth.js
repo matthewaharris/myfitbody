@@ -1,20 +1,23 @@
-import { getUserByClerkId, createOrGetUser } from '../utils/supabase.js';
+import { supabase, getOrLinkUserByAuthId } from '../utils/supabase.js';
 
-// For MVP, we'll use a simple auth check
-// In production, you'd verify Clerk JWT tokens
+// Verifies the Supabase Auth access token from the Authorization header,
+// then resolves (or creates/links) the app user row for it.
 export async function requireAuth(req, res, next) {
   try {
-    // For MVP, we'll accept clerk_user_id from headers
-    // In production, extract this from verified JWT
-    const clerkUserId = req.headers['x-clerk-user-id'];
-    const email = req.headers['x-user-email'];
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-    if (!clerkUserId) {
-      return res.status(401).json({ error: 'Unauthorized - No user ID provided' });
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized - No token provided' });
     }
 
-    // Get or create user in our database
-    const user = await createOrGetUser(clerkUserId, email);
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data?.user) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid or expired token' });
+    }
+
+    const user = await getOrLinkUserByAuthId(data.user.id, data.user.email);
 
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized - User not found' });

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from './supabase';
 
 // Update this URL to your backend URL
 // For local development on Android emulator: http://10.0.2.2:3000
@@ -14,32 +15,27 @@ const api = axios.create({
   },
 });
 
-// Add Clerk user info to requests
-// The backend expects x-clerk-user-id and x-user-email headers
-export const setAuthToken = (token) => {
+// Attach the current Supabase session token to every request.
+// getSession() refreshes automatically when the token is near expiry.
+api.interceptors.request.use(async (config) => {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
   if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common['Authorization'];
+    config.headers.Authorization = `Bearer ${token}`;
   }
-};
+  return config;
+});
 
-// Set user info headers for backend auth middleware
-export const setUserInfo = (clerkUserId, email) => {
-  if (clerkUserId) {
-    api.defaults.headers.common['x-clerk-user-id'] = clerkUserId;
-    api.defaults.headers.common['x-user-email'] = email || '';
-  } else {
-    delete api.defaults.headers.common['x-clerk-user-id'];
-    delete api.defaults.headers.common['x-user-email'];
-  }
-};
+// Deprecated: tokens now attach automatically via the interceptor above.
+// Kept as no-ops so existing screens don't need to change their call sites.
+export const setAuthToken = () => {};
+export const setUserInfo = () => {};
 
 // User endpoints
-export const createUser = async (clerkUserId, email, firstName = null, lastName = null, phoneNumber = null) => {
+// The user row is created server-side on first authenticated request;
+// this fills in the optional name/phone fields.
+export const createUser = async (authUserId, email, firstName = null, lastName = null, phoneNumber = null) => {
   const response = await api.post('/users', {
-    clerk_user_id: clerkUserId,
-    email,
     first_name: firstName,
     last_name: lastName,
     phone_number: phoneNumber,
@@ -47,8 +43,10 @@ export const createUser = async (clerkUserId, email, firstName = null, lastName 
   return response.data;
 };
 
-export const getUserByClerkId = async (clerkUserId) => {
-  const response = await api.get(`/users/clerk/${clerkUserId}`);
+// Returns the authenticated user's row (name kept from the Clerk era so
+// screens don't need to change; the argument is ignored).
+export const getUserByClerkId = async () => {
+  const response = await api.get('/users/me');
   return response.data;
 };
 

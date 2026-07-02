@@ -27,9 +27,11 @@ const createChain = () => {
   const chain = {
     select: jest.fn(() => chain),
     eq: jest.fn(() => chain),
+    is: jest.fn(() => chain),
+    order: jest.fn(() => chain),
+    limit: jest.fn(() => chain),
     gte: jest.fn(() => chain),
     lte: jest.fn(() => chain),
-    order: jest.fn(() => chain),
     single: mockSingle,
     maybeSingle: mockMaybeSingle,
     then: (resolve) => resolve({ data: currentMockData, error: currentMockError }),
@@ -37,7 +39,16 @@ const createChain = () => {
   return chain;
 };
 
-const mockFrom = jest.fn(() => createChain());
+const mockFrom = jest.fn((table) => {
+  // The auth middleware resolves the user from the 'users' table on every
+  // request; keep that lookup working regardless of per-test mock data.
+  if (table === 'users') {
+    const chain = createChain();
+    chain.maybeSingle = jest.fn(() => Promise.resolve({ data: mockUser, error: null }));
+    return chain;
+  }
+  return createChain();
+});
 
 const setMockData = (data, error = null) => {
   currentMockData = data;
@@ -47,14 +58,20 @@ const setMockData = (data, error = null) => {
 jest.unstable_mockModule('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({
     from: mockFrom,
+    auth: {
+      getUser: jest.fn((token) =>
+        token === 'test-token'
+          ? Promise.resolve({ data: { user: { id: 'auth-uuid-123', email: 'test@example.com' } }, error: null })
+          : Promise.resolve({ data: { user: null }, error: { message: 'invalid token' } })
+      ),
+    },
   })),
 }));
 
 const { app } = await import('../../src/index.js');
 
 const authHeaders = {
-  'x-clerk-user-id': 'clerk_test_user',
-  'x-user-email': 'test@example.com',
+  Authorization: 'Bearer test-token',
 };
 
 beforeEach(() => {

@@ -368,6 +368,9 @@ CREATE INDEX IF NOT EXISTS idx_journal_entries_date ON journal_entries(user_id, 
 -- =============================================
 -- ROW LEVEL SECURITY
 -- =============================================
+-- RLS is enabled on ALL tables with NO policies: the anon key (shipped in
+-- the mobile app, used only for auth) gets no table access via the REST API.
+-- All data access goes through the backend, whose service_role key bypasses RLS.
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
@@ -376,9 +379,18 @@ ALTER TABLE workouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE body_measurements ENABLE ROW LEVEL SECURITY;
-
--- Note: RLS policies are not enforced when using service_role key (backend)
--- These policies would apply if you're using the anon key from frontend
+ALTER TABLE water_intake ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recipe_ingredients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_generated_workouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_generated_recipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mood_checkins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE badge_definitions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_stats ENABLE ROW LEVEL SECURITY;
 
 -- =============================================
 -- FUNCTIONS AND TRIGGERS

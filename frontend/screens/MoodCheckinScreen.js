@@ -11,7 +11,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../hooks/useAuth';
 import {
   createMoodCheckin,
   getMoodCheckins,

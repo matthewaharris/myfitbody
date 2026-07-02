@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../hooks/useAuth';
 import { createUser, createUserProfile, setAuthToken, setUserInfo } from '../services/api';
 
 const STEPS = ['Personal', 'Goals', 'Diet', 'Foods', 'Macros', 'Notifications'];

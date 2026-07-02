@@ -10,7 +10,7 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../hooks/useAuth';
 import { getMyProfile, updateMyProfile, updateUser, getUserByClerkId, setAuthToken, setUserInfo, deleteMyAccount } from '../services/api';
 
 export default function ProfileScreen({ onNavigate }) {

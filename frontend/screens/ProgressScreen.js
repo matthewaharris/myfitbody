@@ -13,7 +13,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../hooks/useAuth';
 import * as ImagePicker from 'expo-image-picker';
 import {
   getMeasurements,

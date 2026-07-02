@@ -15,7 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../hooks/useAuth';
 import {
   getRecipes,
   createRecipe,

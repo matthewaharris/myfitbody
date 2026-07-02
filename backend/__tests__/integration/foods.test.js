@@ -29,6 +29,11 @@ const mockMaybeSingle = jest.fn(() => Promise.resolve({ data: currentMockData, e
 const mockFrom = jest.fn(() => ({
   select: jest.fn().mockReturnThis(),
   eq: jest.fn().mockReturnThis(),
+  is: jest.fn().mockReturnThis(),
+  order: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+  insert: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
   maybeSingle: mockMaybeSingle,
   single: jest.fn(() => Promise.resolve({ data: currentMockData, error: currentMockError })),
   then: (resolve) => resolve({ data: currentMockData, error: currentMockError }),
@@ -42,14 +47,20 @@ const setMockData = (data, error = null) => {
 jest.unstable_mockModule('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({
     from: mockFrom,
+    auth: {
+      getUser: jest.fn((token) =>
+        token === 'test-token'
+          ? Promise.resolve({ data: { user: { id: 'auth-uuid-123', email: 'test@example.com' } }, error: null })
+          : Promise.resolve({ data: { user: null }, error: { message: 'invalid token' } })
+      ),
+    },
   })),
 }));
 
 const { app } = await import('../../src/index.js');
 
 const authHeaders = {
-  'x-clerk-user-id': 'clerk_test_user',
-  'x-user-email': 'test@example.com',
+  Authorization: 'Bearer test-token',
 };
 
 beforeEach(() => {
